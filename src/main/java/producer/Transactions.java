@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
-import java.time.Instant;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -18,10 +18,12 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static java.util.Collections.unmodifiableList;
 
+import java.util.Calendar;
+
 /**
  * run:
  * cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- * java -classpath kafka-producer-0.0.1.0.jar producer.Transactions localhost:9092
+ * java -classpath StreamAnalytics-0.0.1.0-SNAPSHOT.jar producer.Transactions localhost:9092
  *
  * @author Marcel Daeppen
  * @version 2021/11/03 08:21
@@ -79,6 +81,7 @@ public class Transactions {
 
         final ObjectNode node = new ObjectMapper().readValue(valueJson, ObjectNode.class);
         String key = String.valueOf(node.get("trx_id"));
+        key = key.replace("\"", "");
 
         ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("Transactions", key, valueJson);
 
@@ -90,11 +93,15 @@ public class Transactions {
     // build random json object
     private static ObjectNode jsonObject() {
 
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.sss");
+        String strDate = sdf.format(cal.getTime());
+
         ObjectNode report = objectMapper.createObjectNode();
         report.put("trx_id", "51" + (random.nextInt(89) + 10) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000));
         report.put("currency_code", transaction_currency_list.get(random.nextInt(transaction_currency_list.size())));
         report.put("total", ThreadLocalRandom.current().nextDouble(6, 6656));
-        report.put("transaction_time", Instant.now().toString());
+        report.put("transaction_time",strDate );
 
         return report;
     }

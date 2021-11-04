@@ -9,11 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-import java.util.Random;
+import java.util.*;
 
 import static java.util.Collections.unmodifiableList;
 
@@ -21,7 +19,7 @@ import static java.util.Collections.unmodifiableList;
 /**
  * run:
  *   cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- *   java -classpath kafka-producer-0.0.1.0.jar producer.FxRates localhost:9092
+ *   java -classpath StreamAnalytics-0.0.1.0-SNAPSHOT.jar producer.FxRates localhost:9092
  *
  * @author Marcel Daeppen
  * @version 2021/11/03 08:28
@@ -93,10 +91,14 @@ public class FxRates {
     // build random json object
     private static ObjectNode jsonObject() {
 
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.sss");
+        String strDate = sdf.format(cal.getTime());
+
         ObjectNode report = objectMapper.createObjectNode();
         report.put("currency_code", transaction_currency_list.get(random.nextInt(transaction_currency_list.size())));
         report.put("eur_rate", (random.nextInt(20) + 90) / 100.0);
-        report.put("rate_time", Instant.now().toString());
+        report.put("rate_time",strDate );
 
         return report;
     }
