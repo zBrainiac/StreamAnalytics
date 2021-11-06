@@ -7,14 +7,14 @@ image::../../images/TemporalJoinTransactionWithLatestFX.png[width=800]
 == download generator:
 [source,bash]
 ----
-wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.2/StreamAnalytics-0.0.2.0-SNAPSHOT.jar
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.2/StreamAnalytics-0.0.2.0.jar
 ----
 
 === starting producers - `CurrencyCode`
 
 [source,shell script]
 ----
-java -classpath StreamAnalytics-0.0.2.0-SNAPSHOT.jar producer.CurrencyCode kafka:9092
+java -classpath StreamAnalytics-0.0.2.00.jar producer.CurrencyCode kafka:9092
 
 ----
 
@@ -35,7 +35,7 @@ EUR - {"currency_code":"EUR","eur_rate":0.92,"rate_time":"2021-11-04 16:16:20.02
 === starting producers - `transactions`
 
 ----
-java -classpath StreamAnalytics-0.0.2.0-SNAPSHOT.jar producer.Transactions kafka:9092
+java -classpath StreamAnalytics-0.0.2.00.jar producer.Transactions kafka:9092
 ----
 
 === Console output
