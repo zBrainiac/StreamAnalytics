@@ -1,0 +1,112 @@
+= Temporal join of transaction with the latest currency rate
+
+Both the `transactions` and `currency_rates` tables are representing a Kafka topic, but in the case of rates this topic is compacted (i.e. only the most recent messages for a given key (= currency_code) are kept as updated rates flow in). Records in transactions are interpreted as inserts only, and so the table is backed by the standard Kafka connector (connector = kafka); while the records in currency_rates need to be interpreted as upserts based on a primary key, which requires the Upsert Kafka connector (connector = upsert-kafka).
+
+image::../../images/TemporalJoinTransactionWithLatestFX.png[width=800]
+
+== download generator:
+[source,bash]
+----
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.2/StreamAnalytics-0.0.2.0-SNAPSHOT.jar
+----
+
+=== starting producers - `CurrencyCode`
+
+[source,shell script]
+----
+java -classpath StreamAnalytics-0.0.2.0-SNAPSHOT.jar producer.CurrencyCode kafka:9092
+
+----
+
+=== Console output
+
+[source,shell script]
+----
+./bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic currency_code --property print.key=true --property key.separator=" - "
+
+EUR - {"currency_code":"EUR","eur_rate":1.02,"rate_time":"2021-11-04 16:16:16.016"}
+CHF - {"currency_code":"CHF","eur_rate":0.97,"rate_time":"2021-11-04 16:16:17.017"}
+CHF - {"currency_code":"CHF","eur_rate":0.94,"rate_time":"2021-11-04 16:16:18.018"}
+EUR - {"currency_code":"EUR","eur_rate":0.96,"rate_time":"2021-11-04 16:16:19.019"}
+EUR - {"currency_code":"EUR","eur_rate":0.92,"rate_time":"2021-11-04 16:16:20.020"}
+...
+----
+
+=== starting producers - `transactions`
+
+----
+java -classpath StreamAnalytics-0.0.2.0-SNAPSHOT.jar producer.Transactions kafka:9092
+----
+
+=== Console output
+
+[source,shell script]
+----
+./bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic transactions --property print.key=true --property key.separator=" - "
+
+5146-9824-9422-5845 - {"trx_id":"5146-9824-9422-5845","currency_code":"EUR","total":2100.2884258642616,"transaction_time":"2021-11-04 16:20:42.042"}
+5171-3446-9888-4150 - {"trx_id":"5171-3446-9888-4150","currency_code":"EUR","total":2365.783633975278,"transaction_time":"2021-11-04 16:20:43.043"}
+5183-1485-1442-5034 - {"trx_id":"5183-1485-1442-5034","currency_code":"EUR","total":4311.410868584851,"transaction_time":"2021-11-04 16:20:44.044"}
+5191-4653-9906-4654 - {"trx_id":"5191-4653-9906-4654","currency_code":"CHF","total":1368.0098006066453,"transaction_time":"2021-11-04 16:20:45.045"}
+5179-8505-1275-5461 - {"trx_id":"5179-8505-1275-5461","currency_code":"CHF","total":5159.681895688063,"transaction_time":"2021-11-04 16:20:46.046"}
+...
+----
+
+==  Analytics Event Streamings
+
+Once everything is up and running, you can reach the SQL Stream Builder Console at: localhost:8000[localhost:8000] +
+The default login and password are “admin" / "admin”.
+
+=== Create a table
+
+[source,sql]
+----
+SHOW Tables;
+DROP TEMPORARY TABLE currency_code;
+
+CREATE TEMPORARY TABLE currency_code (
+  `currency_code` STRING,
+  `eur_rate` DECIMAL(6,4),
+  `rate_time` TIMESTAMP(3),
+  WATERMARK FOR `rate_time` AS rate_time - INTERVAL '15' SECONDS,
+  PRIMARY KEY (currency_code) NOT ENFORCED
+) WITH (
+  'connector' = 'upsert-kafka',
+  'topic' = 'currency_code',
+  'properties.bootstrap.servers' = 'kafka:9092',
+  'key.format' = 'raw',
+  'value.format' = 'json'
+);
+
+SELECT * FROM currency_code ;
+
+DROP TEMPORARY TABLE transactions ;
+
+CREATE TEMPORARY TABLE transactions (
+  `trx_id` STRING,
+  `currency_code` STRING,
+  `total` DECIMAL(10,2),
+  `transaction_time` TIMESTAMP(3),
+  WATERMARK FOR `transaction_time` AS transaction_time - INTERVAL '30' SECONDS
+) WITH (
+  'connector' = 'kafka',
+  'topic' = 'transactions',
+  'properties.bootstrap.servers' = 'kafka:9092',
+  'key.format' = 'raw',
+  'key.fields' = 'trx_id',
+  'value.format' = 'json',
+  'value.fields-include' = 'ALL'
+);
+
+SELECT * FROM transactions ;)
+
+SELECT
+  t.trx_id,
+  t.total * c.eur_rate AS total_eur,
+  t.total,
+  c.currency_code,
+  t.transaction_time
+FROM transactions t
+JOIN currency_code FOR SYSTEM_TIME AS OF t.transaction_time AS c
+ON t.currency_code = c.currency_code;
+----

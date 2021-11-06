@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.*;
 
 import static java.util.Collections.unmodifiableList;
@@ -19,19 +18,19 @@ import static java.util.Collections.unmodifiableList;
 /**
  * run:
  *   cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- *   java -classpath StreamAnalytics-0.0.1.0-SNAPSHOT.jar producer.FxRates localhost:9092
+ *   java -classpath StreamAnalytics-0.0.2.0-SNAPSHOT.jar producer.CurrencyCode kafka:9092
  *
  * @author Marcel Daeppen
  * @version 2021/11/03 08:28
  */
 
-public class FxRates {
+public class CurrencyCode {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Logger LOG = LoggerFactory.getLogger(FxRates.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CurrencyCode.class);
     private static final Random random = new SecureRandom();
     private static final String LOGGERMSG = "Program prop set {}";
-    private static String brokerURI = "localhost:9092";
+    private static String brokerURI = "kafka:9092";
     private static long sleeptime = 1000;
     private static final List<String> transaction_currency_list = unmodifiableList(Arrays.asList(
             "USD", "EUR", "CHF"));
@@ -63,7 +62,7 @@ public class FxRates {
     private static Producer<String, byte[]> createProducer() {
         Properties config = new Properties();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerURI);
-        config.put(ProducerConfig.CLIENT_ID_CONFIG, "Feeder-FXRate");
+        config.put(ProducerConfig.CLIENT_ID_CONFIG, "Feeder-CurrencyCode");
         config.put(ProducerConfig.ACKS_CONFIG,"1");
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
@@ -81,7 +80,7 @@ public class FxRates {
         key = key.replace("\"", "");
 
 
-        ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("FXRate", key, valueJson);
+        ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("currency_code", key, valueJson);
 
         RecordMetadata msg = producer.send(eventrecord).get();
 
@@ -104,6 +103,6 @@ public class FxRates {
     }
 
     public static void setsleeptime(long sleeptime) {
-        FxRates.sleeptime = sleeptime;
+        CurrencyCode.sleeptime = sleeptime;
     }
 }

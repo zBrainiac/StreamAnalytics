@@ -23,7 +23,7 @@ import java.util.Calendar;
 /**
  * run:
  * cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- * java -classpath StreamAnalytics-0.0.1.0-SNAPSHOT.jar producer.Transactions localhost:9092
+ * java -classpath StreamAnalytics-0.0.2.0-SNAPSHOT.jar producer.Transactions kafka:9092
  *
  * @author Marcel Daeppen
  * @version 2021/11/03 08:21
@@ -38,7 +38,7 @@ public class Transactions {
             "USD", "EUR", "CHF"));
 
     private static String brokerURI = "localhost:9092";
-    private static long sleeptime = 1000;
+    private static long sleeptime = 200;
 
     public static void main(String[] args) throws Exception {
 
@@ -83,7 +83,7 @@ public class Transactions {
         String key = String.valueOf(node.get("trx_id"));
         key = key.replace("\"", "");
 
-        ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("Transactions", key, valueJson);
+        ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("transactions", key, valueJson);
 
         RecordMetadata msg = producer.send(eventrecord).get();
 
