@@ -51,7 +51,7 @@ BOOTSTRAP_SERVERS_CONFIG = kafka:9092
 == Example Application
 === use case description
 . Hello world in Streaming - xref:showcase/examples/hello_world.adoc[details]
-. Temporal join of transaction with the latest currency rate - xref:showcase/examples/temp_join_order_with_fx.adoc[details]
+. Temporal join of Iot / Sensor data with the latest Geo Location from RefData - xref:showcase/examples/temp_join_IoT_with_RefDataLookup.adoc[details]
 
 === download generator:
 [source,shell script]

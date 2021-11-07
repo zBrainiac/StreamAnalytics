@@ -36,14 +36,16 @@ java -classpath StreamAnalytics-0.0.2.0.jar producer.KafkaIOTSensorSimulatorAnom
 
 ==  Analytics Event Streaming
 
-Once everything is up and running, you can reach the SQL Stream Builder Console at: localhost:8000[localhost:8000] +
+Once everything is up and running, you can reach the SQL Stream Builder Console at: http://localhost:8000[localhost:8000] +
 The default login and password are “admin" / "admin”.
+
+Quick intro in how to use the Streaming SQL Console: https://docs.cloudera.com/csa/1.5.1/ssb-sql-console/topics/csa-ssb-using-console.html[official SSB DOC]
 
 === Create a table
 
 [source,sql]
 ----
-CREATE TEMPORARY TABLE `iot_raw` (
+CREATE TEMPORARY TABLE `IoT_Raw` (
 `sensor_ts` BIGINT,
 `sensor_id` BIGINT,
 `sensor_0` BIGINT,
@@ -60,13 +62,14 @@ CREATE TEMPORARY TABLE `iot_raw` (
 `sensor_11` BIGINT,
 `eventTimestamp` TIMESTAMP(3) METADATA FROM 'timestamp',
 WATERMARK FOR `eventTimestamp` AS `eventTimestamp` - INTERVAL '3' SECOND
-) COMMENT 'iot_raw'
+) COMMENT 'IoT_Raw'
 WITH (
 'properties.bootstrap.servers' = 'kafka:9092',
 'properties.auto.offset.reset' = 'earliest',
 'connector' = 'kafka',
 'format' = 'json',
 'topic' = 'iot',
+'properties.group.id' = 'IoT_Raw',
 'scan.startup.mode' = 'earliest-offset'
 );
 ----
@@ -74,7 +77,7 @@ WITH (
 === First continuously running SQL query
 [source,sql]
 ----
-SELECT * FROM iot_raw ;
+SELECT * FROM IoT_Raw ;
 ----
 
 === Increase the level of difficulty
@@ -83,7 +86,7 @@ well done! So let’s increase the level of difficulty and replace the existing 
 ----
 SELECT sensor_id,
 count(*) as sensorCount
-FROM iot_raw
+FROM IoT_Raw
 GROUP BY sensor_id
 ----
 
@@ -96,7 +99,7 @@ SELECT
   `sensor_id`,
   `sensor_0`,
   `sensor_1`
-FROM iot_raw ;
+FROM IoT_Raw ;
 ----
 
 [WARNING]

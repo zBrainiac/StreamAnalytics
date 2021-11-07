@@ -14,8 +14,7 @@ wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalyt
 
 [source,shell script]
 ----
-java -classpath StreamAnalytics-0.0.2.0.jar producer.CurrencyCode kafka:9092
-
+java -classpath StreamAnalytics-0.0.2.0.jar producer.CurrencyCode
 ----
 
 === Console output
@@ -32,10 +31,10 @@ EUR - {"currency_code":"EUR","eur_rate":0.92,"rate_time":"2021-11-04 16:16:20.02
 ...
 ----
 
-=== starting producers - `transactions`
+=== starting producers - `Transactions`
 
 ----
-java -classpath StreamAnalytics-0.0.2.0.jar producer.Transactions kafka:9092
+java -classpath StreamAnalytics-0.0.2.0.jar producer.Transactions
 ----
 
 === Console output
@@ -75,6 +74,7 @@ CREATE TEMPORARY TABLE currency_code (
   'topic' = 'currency_code',
   'properties.bootstrap.servers' = 'kafka:9092',
   'key.format' = 'raw',
+  'properties.group.id' = 'currency_code',
   'value.format' = 'json'
 );
 
@@ -95,7 +95,8 @@ CREATE TEMPORARY TABLE transactions (
   'key.format' = 'raw',
   'key.fields' = 'trx_id',
   'value.format' = 'json',
-  'value.fields-include' = 'ALL'
+  'value.fields-include' = 'ALL',
+  'properties.group.id' = 'transactions',
 );
 
 SELECT * FROM transactions ;)
