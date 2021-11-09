@@ -1,0 +1,79 @@
+= fddd
+
+== download generator:
+[source,bash]
+----
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.2/StreamAnalytics-0.0.3.0.jar
+----
+
+=== starting producers: `LookupWeatherCondition`
+
+[source,shell script]
+----
+java -classpath StreamAnalytics-0.0.3.0.jar producer.LookupWeatherCondition
+----
+
+=== Console output
+After the key is defined as an integer, an additional parameter must be given to the kafka-console-consumer:
+
+_--key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"_
+
+
+[source,shell script]
+----
+./bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic lookup_weathercondition --property print.key=true --property key.separator=" - " --key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"
+
+0 - 1,1636364828796,19.6,0,0,413,76.9,15.4,198,9.7,16.9,950.5,1011.5,1013.7,,,,,,,,
+1 - 2,1636364828796,18.6,0,0,155,77.4,14.6,138,2.9,7.6,946.6,1011.9,1014,,,,,,,,
+2 - 3,1636364828796,13,0.1,0,251,88.7,11.2,63,11.2,18,866.7,,1016.6,1489.2,,,,,,,
+3 - 4,1636364828796,17.8,0,0,147,87.9,15.8,164,7.2,11.9,968.8,1012.9,1013.9,,,,,,,,
+4 - 5,1636364828796,18.6,0,0,312,80.9,15.3,317,4,7.6,962,1012.3,1013.7,,,,,,,,
+5 - 6,1636364828796,19.9,0,0,378,87.4,17.7,356,5.4,9.7,966.5,1012,1013.5,,,,,,,,
+----
+
+
+
+
+=== Create a table
+
+[source,sql]
+----
+CREATE TEMPORARY TABLE `weather_condition` (
+  `station_id` INT,
+  `eventDate` BIGINT,
+  `tre200s0` DOUBLE,
+  `rre150z0` DOUBLE,
+  `sre000z0` DOUBLE,
+  `gre000z0` DOUBLE,
+  `ure200s0` DOUBLE,
+  `tde200s0` DOUBLE,
+  `dkl010z0` DOUBLE,
+  `fu3010z0` DOUBLE,
+  `fu3010z1` DOUBLE,
+  `prestas0` DOUBLE,
+  `pp0qffs0` DOUBLE,
+  `pp0qnhs0` DOUBLE,
+  `ppz850s0` DOUBLE,
+  `ppz700s0` DOUBLE,
+  `dv1towz0` DOUBLE,
+  `fu3towz0` DOUBLE,
+  `fu3towz1` DOUBLE,
+  `ta1tows0` DOUBLE,
+  `uretows0` DOUBLE,
+  `tdetows0` DOUBLE
+  `eventTimestamp` TIMESTAMP(3) METADATA FROM 'timestamp',
+  WATERMARK FOR `eventTimestamp` AS `eventTimestamp` - INTERVAL '15' SECONDS,
+  PRIMARY KEY (station_id) NOT ENFORCED
+) WITH (
+  'connector' = 'upsert-kafka',
+  'topic' = 'kafka_LookupWeatherCondition',
+  'properties.bootstrap.servers' = 'kafka:9092',
+  'properties.group.id' = 'lookup_weathercondition',
+  'format' = 'csv',
+  'key.format' = 'raw',
+  'properties.group.id' = 'lookup_weathercondition',
+  'value.format' = 'json'
+);
+
+SELECT * FROM `weather_condition` ;
+----

@@ -9,13 +9,13 @@ image::../../images/HelloWorld.png[width=800]
 == download generator:
 [source,bash]
 ----
-wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.2/StreamAnalytics-0.0.2.0.jar
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.2/StreamAnalytics-0.0.3.0.jar
 ----
 
-=== starting producers - `iot`
+=== starting producers: `iot`
 
 ----
-java -classpath StreamAnalytics-0.0.2.0.jar producer.KafkaIOTSensorSimulatorAnomaly
+java -classpath StreamAnalytics-0.0.3.0.jar producer.IoTSensorSimulatorAnomaly
 ----
 
 === Console output
@@ -77,29 +77,33 @@ WITH (
 === First continuously running SQL query
 [source,sql]
 ----
-SELECT * FROM IoT_Raw ;
+SELECT * FROM `IoT_Raw` ;
 ----
 
 === Increase the level of difficulty
 well done! So let’s increase the level of difficulty and replace the existing SQL with the _HELLO WORLD_ in streaming and counting the events by sensor_id using standard SQL with GROUP BY and COUNT.
 [source,sql]
 ----
-SELECT sensor_id,
-count(*) as sensorCount
-FROM IoT_Raw
-GROUP BY sensor_id
+SELECT
+  `sensor_id`,
+  count(*) as sensorCount
+FROM `IoT_Raw`
+GROUP BY `sensor_id` ;
 ----
 
-=== Timestamp conversion epoch to ISO
+
+
+=== WHERE condition / filtering
 
 [source,sql]
 ----
 SELECT
-   FROM_UNIXTIME(`sensor_ts`) as event_time,
+  `sensor_ts`,
   `sensor_id`,
   `sensor_0`,
   `sensor_1`
-FROM IoT_Raw ;
+FROM `IoT_Raw`
+WHERE `sensor_0` = 3;
 ----
 
 [WARNING]

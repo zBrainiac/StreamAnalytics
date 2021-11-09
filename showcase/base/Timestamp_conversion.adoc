@@ -1,0 +1,48 @@
+= Timestamp conversion
+
+== Timestamp conversion epoch to ISO
+
+=== Event Time Attribute on TIMESTAMP_LTZ
+If the timestamp data in the source is represented as an epoch time, usually a long value, e.g. 1636389674263, it’s recommended to define event time attribute as a `TIMESTAMP_LTZ` column.
+
+result: 1636389674263 converted into "2021-11-08T17:14:56.367Z"
+
+for more detail see official flink doc https://ci.apache.org/projects/flink/flink-docs-master/docs/dev/table/concepts/timezone/[timezone]
+
+[source,sql]
+----
+DROP TEMPORARY TABLE `IoT_Raw_Ts`;
+
+CREATE TEMPORARY TABLE `IoT_Raw_Ts` (
+  `sensor_ts` BIGINT, -- long time value in epoch milliseconds
+  `ts_ltz` AS TO_TIMESTAMP_LTZ(`sensor_ts`, 3), -- convert into human readable Ts
+  `sensor_id` INT,
+  `sensor_0` BIGINT,
+  `sensor_1` BIGINT,
+  `sensor_2` BIGINT,
+  `sensor_3` BIGINT,
+  `sensor_4` BIGINT,
+  `sensor_5` BIGINT,
+  `sensor_6` BIGINT,
+  `sensor_7` BIGINT,
+  `sensor_8` BIGINT,
+  `sensor_9` BIGINT,
+  `sensor_10` BIGINT,
+  `sensor_11` BIGINT,
+  `eventTimestamp` TIMESTAMP(3) METADATA FROM 'timestamp',
+  WATERMARK FOR `eventTimestamp` AS `eventTimestamp` - INTERVAL '3' SECOND
+) COMMENT 'iot_enriched_source'
+WITH (
+
+  'connector' = 'kafka',
+  'topic' = 'iot',
+  'properties.bootstrap.servers' = 'kafka:9092',
+  'properties.auto.offset.reset' = 'earliest',
+  'format' = 'json',
+  'scan.startup.mode' = 'earliest-offset',
+  'properties.group.id' = 'iot'
+);
+
+SELECT * FROM IoT_Raw_Ts ;
+
+----

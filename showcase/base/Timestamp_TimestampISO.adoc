@@ -1,0 +1,94 @@
+= ISO 8601
+
+I strongly recommend always using timestamps with a clear relation to UTC or even better operating all systems with timestamps in UTC. https://en.wikipedia.org/wiki/ISO_8601[ISO 8601:2004] is a widely used format with a fixed reference calendar date to the Gregorian calendar of 20 May 1875. which also supports UTC by  adding a 'Z' directly after the time without a space e.g. "2021-11-08T13:23:41.122Z".
+
+== starting producers: `CurrencyCode`
+
+[source,shell script]
+----
+java -classpath StreamAnalytics-0.0.3.0.jar producer.CurrencyCode
+----
+
+=== Console output
+
+[source,shell script]
+----
+./bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic currency_code --property print.key=true --property key.separator=" - "
+
+EUR - {"currency_code":"EUR","eur_rate":1.02,"rate_time":"2021-11-04 16:16:16.016"}
+CHF - {"currency_code":"CHF","eur_rate":0.97,"rate_time":"2021-11-04 16:16:17.017"}
+CHF - {"currency_code":"CHF","eur_rate":0.94,"rate_time":"2021-11-04 16:16:18.018"}
+EUR - {"currency_code":"EUR","eur_rate":0.96,"rate_time":"2021-11-04 16:16:19.019"}
+EUR - {"currency_code":"EUR","eur_rate":0.92,"rate_time":"2021-11-04 16:16:20.020"}
+...
+----
+
+
+
+== starting producers: `CurrencyCodeISO`
+
+[source,shell script]
+----
+java -classpath StreamAnalytics-0.0.3.0.jar producer.CurrencyCodeISO
+----
+
+=== Console output
+
+[source,shell script]
+----
+ ./bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic currency_code_iso --property print.key=true --property key.separator=" - "
+
+USD - {"currency_code":"USD","eur_rate":1.08,"rate_time":"2021-11-08T13:25:45.083Z"}
+EUR - {"currency_code":"EUR","eur_rate":0.93,"rate_time":"2021-11-08T13:25:46.088Z"}
+USD - {"currency_code":"USD","eur_rate":0.99,"rate_time":"2021-11-08T13:25:47.096Z"}
+EUR - {"currency_code":"EUR","eur_rate":0.92,"rate_time":"2021-11-08T13:25:48.105Z"}
+CHF - {"currency_code":"CHF","eur_rate":0.96,"rate_time":"2021-11-08T13:25:50.118Z"}
+...
+----
+
+
+
+=== Create a table
+
+[source,sql]
+----
+SHOW Tables;
+DROP TEMPORARY TABLE currency_code;
+
+CREATE TEMPORARY TABLE currency_code (
+  `currency_code` STRING,
+  `eur_rate` DECIMAL(6,4),
+  `rate_time` TIMESTAMP(3),
+  WATERMARK FOR `rate_time` AS rate_time - INTERVAL '15' SECONDS,
+  PRIMARY KEY (currency_code) NOT ENFORCED
+) WITH (
+  'connector' = 'upsert-kafka',
+  'topic' = 'currency_code',
+  'properties.bootstrap.servers' = 'kafka:9092',
+  'key.format' = 'raw',
+  'properties.group.id' = 'currency_code',
+  'value.format' = 'json'
+);
+----
+
+=== Create a table ISO
+
+For the processing of ISO 8601:2004 Timestamp with UTC you must use the following configuration.
+
+[source,sql]
+----
+CREATE TEMPORARY TABLE currency_code_iso (
+`currency_code` STRING,
+`eur_rate` DECIMAL(6,4),
+`rate_time` TIMESTAMP_LTZ(3),  -- TIMESTAMP_LTZ describes an absolute time point on the time-line
+WATERMARK FOR `rate_time` AS rate_time - INTERVAL '15' SECONDS,
+PRIMARY KEY (currency_code) NOT ENFORCED
+) WITH (
+'connector' = 'upsert-kafka',
+'topic' = 'currency_code_iso',
+'properties.bootstrap.servers' = 'kafka:9092',
+'key.format' = 'raw',
+'value.format' = 'json',
+'value.json.timestamp-format.standard' = 'ISO-8601'  -- Timestamp format definion
+);
+----

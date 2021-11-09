@@ -11,33 +11,30 @@ import org.slf4j.LoggerFactory;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.*;
 
 import static java.util.Collections.unmodifiableList;
 
+
 /**
  * run:
- * cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- * java -classpath StreamAnalytics-0.0.3.0.jar producer.Transactions kafka:9092
+ *   cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
+ *   java -classpath StreamAnalytics-0.0.3.0.jar producer.CurrencyCodeISO localhost:9092
  *
  * @author Marcel Daeppen
- * @version 2021/11/03 08:21
+ * @version 2021/11/03 08:28
  */
 
-public class Transactions {
+public class CurrencyCodeISO {
+
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Logger LOG = LoggerFactory.getLogger(Transactions.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CurrencyCodeISO.class);
     private static final Random random = new SecureRandom();
     private static final String LOGGERMSG = "Program prop set {}";
+    private static String brokerURI = "kafka:9092";
+    private static long sleeptime = 1000;
     private static final List<String> transaction_currency_list = unmodifiableList(Arrays.asList(
             "USD", "EUR", "CHF"));
-
-    private static String brokerURI = "localhost:9092";
-    private static long sleeptime = 200;
 
     public static void main(String[] args) throws Exception {
 
@@ -66,8 +63,8 @@ public class Transactions {
     private static Producer<String, byte[]> createProducer() {
         Properties config = new Properties();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerURI);
-        config.put(ProducerConfig.CLIENT_ID_CONFIG, "Feeder-Transactions");
-        config.put(ProducerConfig.ACKS_CONFIG, "1");
+        config.put(ProducerConfig.CLIENT_ID_CONFIG, "Feeder-CurrencyCodeISO");
+        config.put(ProducerConfig.ACKS_CONFIG,"1");
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
         config.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, "com.hortonworks.smm.kafka.monitoring.interceptors.MonitoringProducerInterceptor");
@@ -75,14 +72,15 @@ public class Transactions {
     }
 
     private static void publishMessage(Producer<String, byte[]> producer) throws Exception {
+
         ObjectNode messageJsonObject = jsonObject();
         byte[] valueJson = objectMapper.writeValueAsBytes(messageJsonObject);
 
         final ObjectNode node = new ObjectMapper().readValue(valueJson, ObjectNode.class);
-        String key = String.valueOf(node.get("trx_id"));
+        String key = String.valueOf(node.get("currency_code"));
         key = key.replace("\"", "");
 
-        ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("transactions", key, valueJson);
+        ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("currency_code_iso", key, valueJson);
 
         RecordMetadata msg = producer.send(eventrecord).get();
 
@@ -93,15 +91,14 @@ public class Transactions {
     private static ObjectNode jsonObject() {
 
         ObjectNode report = objectMapper.createObjectNode();
-        report.put("trx_id", "51" + (random.nextInt(89) + 10) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000));
         report.put("currency_code", transaction_currency_list.get(random.nextInt(transaction_currency_list.size())));
-        report.put("total", ThreadLocalRandom.current().nextDouble(6, 6656));
-        report.put("transaction_time", Instant.now().truncatedTo(ChronoUnit.MILLIS).toString());
+        report.put("eur_rate", (random.nextInt(20) + 90) / 100.0);
+        report.put("rate_time", Instant.now().truncatedTo(ChronoUnit.MILLIS).toString());
 
         return report;
     }
 
     public static void setsleeptime(long sleeptime) {
-        Transactions.sleeptime = sleeptime;
+        CurrencyCodeISO.sleeptime = sleeptime;
     }
 }

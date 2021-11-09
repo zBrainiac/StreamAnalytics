@@ -53,10 +53,16 @@ BOOTSTRAP_SERVERS_CONFIG = kafka:9092
 . Hello world in Streaming - xref:showcase/examples/hello_world.adoc[details]
 . Temporal join of Iot / Sensor data with the latest Geo Location from RefData - xref:showcase/examples/temp_join_IoT_with_RefDataLookup.adoc[details]
 
+=== How do
+
+. Timestamp handling: local vs. UTC - xref:showcase/base/Timestamp_TimestampISO.adoc[details]
+. Timestamp conversion - xref:showcase/base/Timestamp_conversion.adoc[details]
+. Create a Table for events in CSV format - xref:showcase/base/CreateTableForCSV.adoc[details]
+
 === download generator:
 [source,shell script]
 ----
-wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.2/StreamAnalytics-0.0.2.00.jar
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.2/StreamAnalytics-0.0.3.0.jar
 ----
 
 
@@ -65,7 +71,7 @@ wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalyt
 [source,shell script]
 ----
 ./bin/kafka-topics.sh --list --bootstrap-server kafka:9092
-./bin/kafka-topics.sh --delete --bootstrap-server kafka:9092 --topic currency_code  &&
+./bin/kafka-topics.sh --delete --bootstrap-server kafka:9092 --topic currency_code_iso  &&
 ./bin/kafka-topics.sh --delete --bootstrap-server kafka:9092 --topic transactions &&
 ----
 

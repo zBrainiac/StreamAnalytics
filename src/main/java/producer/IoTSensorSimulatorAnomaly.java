@@ -18,16 +18,16 @@ import java.util.Random;
 /**
  * run:
  * cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- * java -classpath StreamAnalytics-0.0.2.0.jar producer.KafkaIOTSensorSimulatorAnomaly localhost:9092
+ * java -classpath StreamAnalytics-0.0.3.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
  *
  * @author Marcel Daeppen
  * @version 2021/08/07 14:28
  */
 
-public class KafkaIOTSensorSimulatorAnomaly {
+public class IoTSensorSimulatorAnomaly {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Logger LOG = LoggerFactory.getLogger(KafkaIOTSensorSimulatorAnomaly.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IoTSensorSimulatorAnomaly.class);
     private static final Random random = new SecureRandom();
     private static final String LOGGERMSG = "Program prop set {}";
 
@@ -143,7 +143,7 @@ public class KafkaIOTSensorSimulatorAnomaly {
     }
 
     public static void setsleeptime(long sleeptime) {
-        KafkaIOTSensorSimulatorAnomaly.sleeptime = sleeptime;
+        IoTSensorSimulatorAnomaly.sleeptime = sleeptime;
     }
 
     private static class WeightedRandomBag<T> {

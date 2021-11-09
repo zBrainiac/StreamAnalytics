@@ -9,35 +9,34 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static java.util.Collections.unmodifiableList;
 
 /**
  * run:
  * cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- * java -classpath StreamAnalytics-0.0.3.0.jar producer.Transactions kafka:9092
+ * java -classpath kafka-producer-0.0.3.0.jar producer.FSICreditCartTRX localhost:9092
  *
  * @author Marcel Daeppen
- * @version 2021/11/03 08:21
+ * @version 2021/08/07 14:28
  */
 
-public class Transactions {
+class FSICreditCartTRX {
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Logger LOG = LoggerFactory.getLogger(Transactions.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FSICreditCartTRX.class);
     private static final Random random = new SecureRandom();
     private static final String LOGGERMSG = "Program prop set {}";
+    private static final List<String> transaction_card_type_list = unmodifiableList(Arrays.asList(
+            "Visa", "MasterCard", "Maestro", "AMEX", "Diners Club", "Revolut"));
     private static final List<String> transaction_currency_list = unmodifiableList(Arrays.asList(
             "USD", "EUR", "CHF"));
 
-    private static String brokerURI = "localhost:9092";
-    private static long sleeptime = 200;
+    private static String brokerURI = "kafka:9092";
+    private static long sleeptime = 333;
 
     public static void main(String[] args) throws Exception {
 
@@ -66,7 +65,7 @@ public class Transactions {
     private static Producer<String, byte[]> createProducer() {
         Properties config = new Properties();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerURI);
-        config.put(ProducerConfig.CLIENT_ID_CONFIG, "Feeder-Transactions");
+        config.put(ProducerConfig.CLIENT_ID_CONFIG, "Feeder-CreditCard-TRX");
         config.put(ProducerConfig.ACKS_CONFIG, "1");
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
@@ -78,11 +77,7 @@ public class Transactions {
         ObjectNode messageJsonObject = jsonObject();
         byte[] valueJson = objectMapper.writeValueAsBytes(messageJsonObject);
 
-        final ObjectNode node = new ObjectMapper().readValue(valueJson, ObjectNode.class);
-        String key = String.valueOf(node.get("trx_id"));
-        key = key.replace("\"", "");
-
-        ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("transactions", key, valueJson);
+        ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("cctrx", valueJson);
 
         RecordMetadata msg = producer.send(eventrecord).get();
 
@@ -92,16 +87,54 @@ public class Transactions {
     // build random json object
     private static ObjectNode jsonObject() {
 
-        ObjectNode report = objectMapper.createObjectNode();
-        report.put("trx_id", "51" + (random.nextInt(89) + 10) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000));
-        report.put("currency_code", transaction_currency_list.get(random.nextInt(transaction_currency_list.size())));
-        report.put("total", ThreadLocalRandom.current().nextDouble(6, 6656));
-        report.put("transaction_time", Instant.now().truncatedTo(ChronoUnit.MILLIS).toString());
+        int i = random.nextInt(16);
 
+        ObjectNode report = objectMapper.createObjectNode();
+        report.put("timestamp", System.currentTimeMillis());
+        report.put("cc_id", "51" + (random.nextInt(89) + 10) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000));
+        report.put("cc_type", transaction_card_type_list.get(random.nextInt(transaction_card_type_list.size())));
+        report.put("shop_id", i);
+
+        String shopName = "shop_name";
+        switch (i) {
+            case 0:
+            case 5:
+            case 6:
+                report.put(shopName, "Tante_Emma");
+                break;
+            case 1:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+                report.put(shopName, "Aus_der_Region");
+                break;
+            case 2:
+            case 11:
+                report.put(shopName, "Shop_am_Eck");
+                break;
+            case 3:
+                report.put(shopName, "SihlCity");
+                break;
+            case 4:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            case 16:
+                report.put(shopName, "BioMarkt");
+                break;
+            default:
+                System.err.println("i out of range");
+        }
+
+        report.put("fx", transaction_currency_list.get(random.nextInt(transaction_currency_list.size())));
+        report.put("fx_account", transaction_currency_list.get(random.nextInt(transaction_currency_list.size())));
+        report.put("amount_orig", (random.nextInt(8900) + 10) / 100.0);
         return report;
     }
 
     public static void setsleeptime(long sleeptime) {
-        Transactions.sleeptime = sleeptime;
+        FSICreditCartTRX.sleeptime = sleeptime;
     }
 }

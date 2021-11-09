@@ -2,21 +2,26 @@
 
 Both the `IoT` and `RefData_GeoLocation` tables are representing a Kafka topic, but in the case of RefData_GeoLocation this topic is compacted (i.e. only the most recent messages for a given key (= loc_id) are kept as updated changes flow in). Records in `iot` are interpreted as inserts only, and so the table is backed by the standard Kafka connector (connector = kafka); while the records in RefData_GeoLocation need to be interpreted as upserts based on a primary key, which requires the Upsert Kafka connector (connector = upsert-kafka).
 
+== Use case overview:
+image::../../images/TemporalJoinIoTSensorWithLatestGeoLoc.png[width=800]
 
 == download generator:
 [source,bash]
 ----
-wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.2/StreamAnalytics-0.0.2.00.jar
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.2/StreamAnalytics-0.0.3.0.jar
 ----
 
-=== starting producers  `RefData_GeoLocation`
+=== starting producers: `RefData_GeoLocation`
 
 [source,shell script]
 ----
-java -classpath StreamAnalytics-0.0.2.0.jar producer.RefDataGeoLocation
+java -classpath StreamAnalytics-0.0.3.0.jar producer.RefDataGeoLocation
 ----
 
 === Console output
+After the key is defined as an integer, an additional parameter must be given to the kafka-console-consumer:
+
+_--key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"_
 
 [source,shell script]
 ----
@@ -31,10 +36,10 @@ java -classpath StreamAnalytics-0.0.2.0.jar producer.RefDataGeoLocation
 ...
 ----
 
-=== starting producers `iot`
+=== starting producers: `iot`
 
 ----
-java -classpath StreamAnalytics-0.0.2.0.jar producer.KafkaIOTSensorSimulatorAnomaly
+java -classpath StreamAnalytics-0.0.3.0.jar producer.IoTSensorSimulatorAnomaly
 ----
 
 === Console output

@@ -9,35 +9,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
-import static java.util.Collections.unmodifiableList;
 
 /**
  * run:
- * cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- * java -classpath StreamAnalytics-0.0.3.0.jar producer.Transactions kafka:9092
+ *   cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
+ *   java -classpath kafka-producer-0.0.1.0.jar producer.FSIFXRates localhost:9092
  *
  * @author Marcel Daeppen
- * @version 2021/11/03 08:21
+ * @version 2021/08/07 14:28
  */
 
-public class Transactions {
+public class FSIFXRates {
+
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Logger LOG = LoggerFactory.getLogger(Transactions.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FSIFXRates.class);
     private static final Random random = new SecureRandom();
     private static final String LOGGERMSG = "Program prop set {}";
-    private static final List<String> transaction_currency_list = unmodifiableList(Arrays.asList(
-            "USD", "EUR", "CHF"));
-
-    private static String brokerURI = "localhost:9092";
-    private static long sleeptime = 200;
+    private static String brokerURI = "kafka:9092";
+    private static long sleeptime = 1000;
 
     public static void main(String[] args) throws Exception {
 
@@ -66,8 +58,8 @@ public class Transactions {
     private static Producer<String, byte[]> createProducer() {
         Properties config = new Properties();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerURI);
-        config.put(ProducerConfig.CLIENT_ID_CONFIG, "Feeder-Transactions");
-        config.put(ProducerConfig.ACKS_CONFIG, "1");
+        config.put(ProducerConfig.CLIENT_ID_CONFIG, "Feeder-FXRate");
+        config.put(ProducerConfig.ACKS_CONFIG,"1");
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
         config.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, "com.hortonworks.smm.kafka.monitoring.interceptors.MonitoringProducerInterceptor");
@@ -75,14 +67,18 @@ public class Transactions {
     }
 
     private static void publishMessage(Producer<String, byte[]> producer) throws Exception {
+
         ObjectNode messageJsonObject = jsonObject();
         byte[] valueJson = objectMapper.writeValueAsBytes(messageJsonObject);
 
+
         final ObjectNode node = new ObjectMapper().readValue(valueJson, ObjectNode.class);
-        String key = String.valueOf(node.get("trx_id"));
+        String key = ((node.get("fx" )+ "_" + (node.get("fx_target")) ));
         key = key.replace("\"", "");
 
-        ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("transactions", key, valueJson);
+        LOG.info(key);
+
+        ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("fxrate", key, valueJson);
 
         RecordMetadata msg = producer.send(eventrecord).get();
 
@@ -92,16 +88,68 @@ public class Transactions {
     // build random json object
     private static ObjectNode jsonObject() {
 
-        ObjectNode report = objectMapper.createObjectNode();
-        report.put("trx_id", "51" + (random.nextInt(89) + 10) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000));
-        report.put("currency_code", transaction_currency_list.get(random.nextInt(transaction_currency_list.size())));
-        report.put("total", ThreadLocalRandom.current().nextDouble(6, 6656));
-        report.put("transaction_time", Instant.now().truncatedTo(ChronoUnit.MILLIS).toString());
+        int i= random.nextInt(8);
 
+        ObjectNode report = objectMapper.createObjectNode();
+        report.put("fx_ts", System.currentTimeMillis());
+
+        String fxRate = "fx_rate";
+        String fx_target = "fx_target";
+
+        switch (i) {
+            case 0:
+                report.put("fx", "CHF");
+                report.put(fxRate, 1.00);
+                report.put(fx_target, "CHF");
+                break;
+            case 1:
+                report.put("fx", "CHF");
+                report.put(fx_target, "USD");
+                report.put(fxRate, (random.nextInt(20) + 90) / 100.0);
+                break;
+            case 2:
+                report.put("fx", "CHF");
+                report.put(fx_target, "EUR");
+                report.put(fxRate, (random.nextInt(20) + 90) / 100.0);
+                break;
+            case 3:
+                report.put("fx", "EUR");
+                report.put(fxRate, 1.00);
+                report.put(fx_target, "EUR");
+                break;
+            case 4:
+                report.put("fx", "EUR");
+                report.put(fx_target, "USD");
+                report.put(fxRate, (random.nextInt(20) + 90) / 100.0);
+                break;
+            case 5:
+                report.put("fx", "EUR");
+                report.put(fx_target, "CHF");
+                report.put(fxRate, (random.nextInt(20) + 90) / 100.0);
+                break;
+            case 6:
+                report.put("fx", "USD");
+                report.put(fxRate, 1.00);
+                report.put(fx_target, "USD");
+                break;
+            case 7:
+                report.put("fx", "USD");
+                report.put(fx_target, "CHF");
+                report.put(fxRate, (random.nextInt(20) + 90) / 100.0);
+                break;
+            case 8:
+                report.put("fx", "USD");
+                report.put(fx_target, "EUR");
+                report.put(fxRate, (random.nextInt(20) + 90) / 100.0);
+                break;
+            default:
+                System.err.println("i out of range");
+
+        }
         return report;
     }
 
     public static void setsleeptime(long sleeptime) {
-        Transactions.sleeptime = sleeptime;
+        FSIFXRates.sleeptime = sleeptime;
     }
 }
