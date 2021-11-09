@@ -1,9 +1,9 @@
-= fddd
+= Create a virtual table for events in CSV format
 
 == download generator:
 [source,bash]
 ----
-wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.2/StreamAnalytics-0.0.3.0.jar
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.3/StreamAnalytics-0.0.3.0.jar
 ----
 
 === starting producers: `LookupWeatherCondition`
