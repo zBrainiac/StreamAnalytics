@@ -29,7 +29,7 @@ public class RefDataGeoLocation {
     private static final String LOGGERMSG = "Program prop set {}";
 
     private static String brokerURI = "kafka:9092";
-    private static long sleeptime = 500;
+    private static long sleeptime = 111;
 
 
     public static void main(String[] args) throws Exception {

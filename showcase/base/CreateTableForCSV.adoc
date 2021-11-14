@@ -34,12 +34,13 @@ _--key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"_
 
 
 
-=== Create a table
+=== Create a table append messages
 
 [source,sql]
 ----
+DROP TEMPORARY TABLE IF EXISTS `weather_condition`;
 CREATE TEMPORARY TABLE `weather_condition` (
-  `station_id` INT,
+  `stationid` INT,
   `eventDate` BIGINT,
   `tre200s0` DOUBLE,
   `rre150z0` DOUBLE,
@@ -61,19 +62,58 @@ CREATE TEMPORARY TABLE `weather_condition` (
   `ta1tows0` DOUBLE,
   `uretows0` DOUBLE,
   `tdetows0` DOUBLE
-  `eventTimestamp` TIMESTAMP(3) METADATA FROM 'timestamp',
-  WATERMARK FOR `eventTimestamp` AS `eventTimestamp` - INTERVAL '15' SECONDS,
-  PRIMARY KEY (station_id) NOT ENFORCED
 ) WITH (
-  'connector' = 'upsert-kafka',
-  'topic' = 'kafka_LookupWeatherCondition',
-  'properties.bootstrap.servers' = 'kafka:9092',
-  'properties.group.id' = 'lookup_weathercondition',
-  'format' = 'csv',
-  'key.format' = 'raw',
-  'properties.group.id' = 'lookup_weathercondition',
-  'value.format' = 'json'
+ 'connector' = 'kafka',
+ 'topic' = 'lookup_weathercondition',
+ 'properties.bootstrap.servers' = 'kafka:9092',
+ 'properties.group.id' = 'kafka_LookupWeatherCondition',
+ 'format' = 'csv',
+ 'csv.ignore-parse-errors' = 'true',
+ 'csv.allow-comments' = 'true'
 );
 
-SELECT * FROM `weather_condition` ;
+select * from weather_condition;
+----
+
+
+
+=== Create a table upsert messages
+
+[source,sql]
+----
+DROP TEMPORARY TABLE IF EXISTS `weather_condition`;
+CREATE TEMPORARY TABLE `weather_condition` (
+  `stationid` INT,
+  `eventDate` BIGINT,
+  `tre200s0` DOUBLE,
+  `rre150z0` DOUBLE,
+  `sre000z0` DOUBLE,
+  `gre000z0` DOUBLE,
+  `ure200s0` DOUBLE,
+  `tde200s0` DOUBLE,
+  `dkl010z0` DOUBLE,
+  `fu3010z0` DOUBLE,
+  `fu3010z1` DOUBLE,
+  `prestas0` DOUBLE,
+  `pp0qffs0` DOUBLE,
+  `pp0qnhs0` DOUBLE,
+  `ppz850s0` DOUBLE,
+  `ppz700s0` DOUBLE,
+  `dv1towz0` DOUBLE,
+  `fu3towz0` DOUBLE,
+  `fu3towz1` DOUBLE,
+  `ta1tows0` DOUBLE,
+  `uretows0` DOUBLE,
+  `tdetows0` DOUBLE,
+  PRIMARY KEY (`stationid`) NOT ENFORCED
+) WITH (
+ 'connector' = 'upsert-kafka',
+ 'topic' = 'lookup_weathercondition',
+ 'properties.bootstrap.servers' = 'kafka:9092',
+ 'properties.group.id' = 'kafka_LookupWeatherCondition',
+ 'key.format' = 'raw',
+ 'value.format' = 'csv'
+);
+
+select * from weather_condition;
 ----

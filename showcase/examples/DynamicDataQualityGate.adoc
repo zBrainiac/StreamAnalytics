@@ -1,39 +1,9 @@
-= Temporal join of transaction with the latest currency rate
-
-Both the `IoT` and `RefData_GeoLocation` tables are representing a Kafka topic, but in the case of RefData_GeoLocation this topic is compacted (i.e. only the most recent messages for a given key (= loc_id) are kept as updated changes flow in). Records in `iot` are interpreted as inserts only, and so the table is backed by the standard Kafka connector (connector = kafka); while the records in RefData_GeoLocation need to be interpreted as upserts based on a primary key, which requires the Upsert Kafka connector (connector = upsert-kafka).
-
-== Use case overview:
-image::../../images/TemporalJoinIoTSensorWithLatestGeoLoc.png[width=800]
+= Dynamic Data Quality Gate
 
 == download generator:
 [source,bash]
 ----
 wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.3/StreamAnalytics-0.0.3.0.jar
-----
-
-=== starting producers: `RefData_GeoLocation`
-
-[source,shell script]
-----
-java -classpath StreamAnalytics-0.0.3.0.jar producer.RefDataGeoLocation
-----
-
-=== Console output
-After the key is defined as an integer, an additional parameter must be given to the kafka-console-consumer:
-
-_--key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"_
-
-[source,shell script]
-----
-./bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic refdata_geoLocation --property print.key=true --property key.separator=" - " --key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"
-0 - {"loc_id":0,"city":"Porrentruy","lon":47.415327,"lat":7.075221}
-1 - {"loc_id":1,"city":"Geneva","lon":46.195602,"lat":6.148113}
-2 - {"loc_id":2,"city":"Zürich","lon":47.366667,"lat":8.55}
-3 - {"loc_id":3,"city":"Basel","lon":47.558395,"lat":7.573271}
-4 - {"loc_id":4,"city":"Bern","lon":46.916667,"lat":7.466667}
-5 - {"loc_id":5,"city":"Lausanne","lon":46.533333,"lat":6.666667}
-6 - {"loc_id":6,"city":"Lucerne","lon":47.083333,"lat":8.266667}
-...
 ----
 
 === starting producers: `iot`
@@ -58,6 +28,39 @@ java -classpath StreamAnalytics-0.0.3.0.jar producer.IoTSensorSimulatorAnomaly
 ...
 ----
 
+== QA reference
+
+=== Load test QA reference test values
+For a first test we can use the Kafka CLI utility to load some example QA reference test values. In a fully automated setup this values can be set by an external data profiler like deequ.
+
+Kafka CLI utility:
+
+[source,shell script]
+----
+./bin/kafka-console-producer.sh --bootstrap-server kafka:9092 --topic refdata_qa --property "parse.key=true" --property "key.separator= - "
+----
+example qa ref. values
+[source,shell script]
+----
+default.IoT_Raw.sensor_0 - {"table_field":"default.IoT_Raw_sensor_0","lastValue":7,"minValue":0,"maxValue":10}
+default.IoT_Raw.sensor_1 - {"table_field":"default.IoT_Raw_sensor_1","lastValue":7,"minValue":0,"maxValue":10}
+default.IoT_Raw.sensor_2 - {"table_field":"default.IoT_Raw_sensor_2","lastValue":7,"minValue":0,"maxValue":10}
+----
+
+For the verification we can use again the Kafka CLI utilities:
+[source,shell script]
+----
+./bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic refdata_qa --from-beginning  --property print.key=true --property key.separator=" - "
+----
+example result qa ref. values
+[source,shell script]
+----
+default.IoT_Raw.sensor_0 - {"table_field":"default.IoT_Raw_sensor_0","lastValue":7,"minValue":0,"maxValue":10}
+default.IoT_Raw.sensor_1 - {"table_field":"default.IoT_Raw_sensor_1","lastValue":7,"minValue":0,"maxValue":10}
+default.IoT_Raw.sensor_2 - {"table_field":"default.IoT_Raw_sensor_2","lastValue":7,"minValue":0,"maxValue":10}
+----
+
+
 ==  Analytics Event Streaming
 
 Once everything is up and running, you can reach the SQL Stream Builder Console at: http://localhost:8000[localhost:8000] +
@@ -65,39 +68,42 @@ The default login and password are “admin" / "admin”.
 
 Quick intro in how to use the Streaming SQL Console: https://docs.cloudera.com/csa/1.5.1/ssb-sql-console/topics/csa-ssb-using-console.html[official SSB DOC]
 
-=== Create a table
+=== Create a table for QA reference values per column (upsert)
+
+We just wanna keep the latest version of the qa ref. values therefore we use the upsert-kafka connector with the `table_field` e.g. default.IoT_Raw_sensor_0 as a primary key.
 
 [source,sql]
 ----
-SHOW Tables;
-DROP TEMPORARY TABLE `RefData_GeoLocation`;
-
-CREATE TEMPORARY TABLE `RefData_GeoLocation` (
-  `loc_id` INT,
-  `city` STRING,
-  `lon` DOUBLE,
-  `lat` DOUBLE,
+SHOW TABLES;
+DROP TEMPORARY TABLE `refdata_qa`
+CREATE TEMPORARY TABLE `refdata_qa` (
+  `table_field` STRING,
+  `lastValue` DOUBLE,
+  `minValue` DOUBLE,
+  `maxValue` DOUBLE,
   `eventTimestamp` TIMESTAMP(3) METADATA FROM 'timestamp',
-  WATERMARK FOR `eventTimestamp` AS `eventTimestamp` - INTERVAL '15' SECONDS,
-  PRIMARY KEY (loc_id) NOT ENFORCED
-) COMMENT 'RefData_GeoLocation'
+  WATERMARK FOR `eventTimestamp` AS `eventTimestamp` - INTERVAL '3' SECOND,
+  PRIMARY KEY (table_field) NOT ENFORCED
+) COMMENT 'refdata_qa'
 WITH (
   'connector' = 'upsert-kafka',
-  'topic' = 'refdata_geoLocation',
   'properties.bootstrap.servers' = 'kafka:9092',
-  'properties.group.id' = 'RefData_GeoLocation',
+  'properties.auto.offset.reset' = 'earliest',
+  'properties.request.timeout.ms' = '120000',
+  'properties.transaction.timeout.ms' = '900000',
   'key.format' = 'raw',
-  'value.format' = 'json'
+  'value.format' = 'json',
+  'topic' = 'refdata_qa'
 );
 
-SELECT * FROM `RefData_GeoLocation` ;
-
-
-DROP TEMPORARY TABLE `IoT_Raw`;
-
+SELECT * FROM `refdata_qa` ;
+----
+=== Create a table for IoT events (insert)
+[source,sql]
+----
 CREATE TEMPORARY TABLE `IoT_Raw` (
   `sensor_ts` BIGINT,
-  `sensor_id` INT,
+  `sensor_id` BIGINT,
   `sensor_0` BIGINT,
   `sensor_1` BIGINT,
   `sensor_2` BIGINT,
@@ -112,34 +118,30 @@ CREATE TEMPORARY TABLE `IoT_Raw` (
   `sensor_11` BIGINT,
   `eventTimestamp` TIMESTAMP(3) METADATA FROM 'timestamp',
   WATERMARK FOR `eventTimestamp` AS `eventTimestamp` - INTERVAL '3' SECOND
-) COMMENT 'iot_enriched_source'
+) COMMENT 'IoT_Raw'
 WITH (
-
-  'connector' = 'kafka',
-  'topic' = 'iot',
   'properties.bootstrap.servers' = 'kafka:9092',
   'properties.auto.offset.reset' = 'earliest',
+  'connector' = 'kafka',
   'format' = 'json',
-  'scan.startup.mode' = 'earliest-offset',
-  'properties.group.id' = 'iot'
+  'topic' = 'iot',
+  'properties.group.id' = 'IoT_Raw',
+  'scan.startup.mode' = 'earliest-offset'
 );
+----
 
-SELECT * FROM `IoT_Raw` ;
+=== Data Quality Gate
 
-
+[source,sql]
+----
 SELECT
   i.`sensor_ts`,
   i.`sensor_id`,
   i.`sensor_0`,
-  geo.`city`,
-  geo.`lon`,
-  geo.`lat`
-FROM `IoT_Raw` i
-JOIN `RefData_GeoLocation` FOR SYSTEM_TIME AS OF i.`eventTimestamp` AS geo
-ON i.`sensor_id` = geo.`loc_id`;
+  qa.`lastValue` AS `sensor_0_lastValue`,
+  qa.`minValue`AS `sensor_0_minValue`,
+  qa.`maxValue` AS `sensor_0_maxValue`
+FROM `IoT_Raw` i, `refdata_qa` qa
+WHERE qa.`table_field` = 'default.IoT_Raw_sensor_0'
+  AND i.`sensor_0` NOT BETWEEN  qa.`minValue` AND qa.`maxValue`; -- value validation against QA values
 ----
-
-[WARNING]
-====
-Make sure to stop your queries to release all resources once you finish. CSA CE is limited to a few worker tasks. You can double-check that all queries/jobs have been stopped by clicking on the SQL Jobs tab. If any jobs are still running, you can stop them from that page.
-====
