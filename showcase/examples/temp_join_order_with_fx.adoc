@@ -62,9 +62,9 @@ The default login and password are “admin" / "admin”.
 [source,sql]
 ----
 SHOW Tables;
-DROP TEMPORARY TABLE currency_code_iso;
+DROP TABLE currency_code_iso;
 
-CREATE TEMPORARY TABLE currency_code_iso (
+CREATE TABLE currency_code_iso (
   `currency_code` STRING,
   `eur_rate` DECIMAL(6,4),
   `rate_time` TIMESTAMP_LTZ(3),
@@ -82,9 +82,9 @@ CREATE TEMPORARY TABLE currency_code_iso (
 
 SELECT * FROM currency_code_iso ;
 
-DROP TEMPORARY TABLE transactions ;
+DROP TABLE transactions ;
 
-CREATE TEMPORARY TABLE transactions (
+CREATE TABLE transactions (
   `trx_id` STRING,
   `currency_code` STRING,
   `total` DECIMAL(10,2),

@@ -1,6 +1,6 @@
-= Temporal join of transaction with the latest currency rate
+= Temporal join of IoT events with the geolocation reference data
 
-Both the `IoT` and `RefData_GeoLocation` tables are representing a Kafka topic, but in the case of RefData_GeoLocation this topic is compacted (i.e. only the most recent messages for a given key (= loc_id) are kept as updated changes flow in). Records in `iot` are interpreted as inserts only, and so the table is backed by the standard Kafka connector (connector = kafka); while the records in RefData_GeoLocation need to be interpreted as upserts based on a primary key, which requires the Upsert Kafka connector (connector = upsert-kafka).
+Both tables `IoT` and `RefData_GeoLocation` are representing a Kafka topic, but in the case of RefData_GeoLocation this topic is compacted (i.e. only the most recent messages for a given key (= loc_id) are kept as updated changes flow in). Records in `iot` are interpreted as inserts only, and so the table is backed by the standard Kafka connector (connector = kafka); while the records in RefData_GeoLocation need to be interpreted as upserts based on a primary key, which requires the Upsert Kafka connector (connector = upsert-kafka).
 
 == Use case overview:
 image::../../images/TemporalJoinIoTSensorWithLatestGeoLoc.png[width=800]
@@ -70,9 +70,9 @@ Quick intro in how to use the Streaming SQL Console: https://docs.cloudera.com/c
 [source,sql]
 ----
 SHOW Tables;
-DROP TEMPORARY TABLE `RefData_GeoLocation`;
+DROP TABLE `RefData_GeoLocation`;
 
-CREATE TEMPORARY TABLE `RefData_GeoLocation` (
+CREATE TABLE `RefData_GeoLocation` (
   `loc_id` INT,
   `city` STRING,
   `lon` DOUBLE,
@@ -93,9 +93,9 @@ WITH (
 SELECT * FROM `RefData_GeoLocation` ;
 
 
-DROP TEMPORARY TABLE `IoT_Raw`;
+DROP TABLE `IoT_Raw`;
 
-CREATE TEMPORARY TABLE `IoT_Raw` (
+CREATE TABLE `IoT_Raw` (
   `sensor_ts` BIGINT,
   `sensor_id` INT,
   `sensor_0` BIGINT,

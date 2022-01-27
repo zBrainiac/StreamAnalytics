@@ -1,6 +1,4 @@
-= Hello World in streaming ;)
-
-
+= "Hello World" in streaming
 
 Each stream (Kafka topic) is represented in CSA as a Table. The `iot_raw` tables is representing the Kafka topic `iot`. Records in `iot` are interpreted as inserts only (append), and so the table is backed by the standard Kafka connector (connector = kafka).
 
@@ -45,7 +43,7 @@ Quick intro in how to use the Streaming SQL Console: https://docs.cloudera.com/c
 
 [source,sql]
 ----
-CREATE TEMPORARY TABLE `IoT_Raw` (
+CREATE TABLE `IoT_Raw` (
 `sensor_ts` BIGINT,
 `sensor_id` BIGINT,
 `sensor_0` BIGINT,
