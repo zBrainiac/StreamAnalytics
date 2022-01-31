@@ -53,6 +53,7 @@ BOOTSTRAP_SERVERS_CONFIG = kafka:9092
 . Hello world in Streaming - xref:showcase/examples/hello_world.adoc[details]
 . Temporal join of Iot / Sensor data with the latest Geo Location from RefData - xref:showcase/examples/temp_join_IoT_with_RefDataLookup.adoc[details]
 . Join, computing and publish aggregation results in kafka - xref:showcase/examples/temp_join_IoT_with_RefDataLookup_Insert_into_topic.adoc[details]
+. Expose steaming events via REST API - xref:showcase/examples/temp_join_IoT_with_RefDataLookup_Insert_into_mat-view.adoc[details]
 
 === How do
 
