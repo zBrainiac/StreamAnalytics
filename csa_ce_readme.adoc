@@ -36,18 +36,6 @@ docker rm -f $(docker ps -a -q) &&
 docker volume rm $(docker volume ls -q)
 ----
 
-=== Add docker network to "/etc/hosts" on macos x:
-[source,shell script]
-----
-sudo -- sh -c -e "echo '127.0.0.1   kafka' >> /etc/hosts"
-----
-
-=== bootstrap_server for Kafka producers:
-[source,shell script]
-----
-BOOTSTRAP_SERVERS_CONFIG = kafka:9092
-----
-
 == Example Application
 === use case description
 . Hello world in Streaming - xref:showcase/examples/hello_world.adoc[details]
