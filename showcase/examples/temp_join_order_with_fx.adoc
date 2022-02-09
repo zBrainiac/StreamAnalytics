@@ -14,7 +14,7 @@ wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalyt
 
 [source,shell script]
 ----
-java -classpath StreamAnalytics-0.0.3.0.jar producer.CurrencyCodeISO
+java -classpath StreamAnalytics-0.0.3.0.jar producer.CurrencyCodeISO localhost:9092
 ----
 
 === Console output
@@ -33,7 +33,7 @@ CHF - {"currency_code":"CHF","eur_rate":0.96,"rate_time":"2021-11-08T13:25:50.11
 === starting producers: `Transactions`
 
 ----
-java -classpath StreamAnalytics-0.0.3.0.jar producer.Transactions
+java -classpath StreamAnalytics-0.0.3.0.jar producer.Transactions localhost:9092
 ----
 
 === Console output

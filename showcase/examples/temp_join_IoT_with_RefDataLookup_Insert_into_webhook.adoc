@@ -17,7 +17,7 @@ wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalyt
 
 [source,shell script]
 ----
-java -classpath StreamAnalytics-0.0.3.0.jar producer.RefDataGeoLocation
+java -classpath StreamAnalytics-0.0.3.0.jar producer.RefDataGeoLocation localhost:9092
 ----
 
 === Console output
@@ -41,7 +41,7 @@ _--key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"_
 === starting producers: `iot`
 
 ----
-java -classpath StreamAnalytics-0.0.3.0.jar producer.IoTSensorSimulatorAnomaly
+java -classpath StreamAnalytics-0.0.3.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
 ----
 
 === Console output

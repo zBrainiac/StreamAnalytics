@@ -9,7 +9,7 @@ wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalyt
 === starting producers: `iot`
 
 ----
-java -classpath StreamAnalytics-0.0.3.0.jar producer.IoTSensorSimulatorAnomaly
+java -classpath StreamAnalytics-0.0.3.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
 ----
 
 === Console output
