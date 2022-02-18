@@ -3,20 +3,20 @@
 == download generator:
 [source,bash]
 ----
-wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.3/StreamAnalytics-0.0.3.0.jar
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.1.0/StreamAnalytics-0.1.0.0.jar
 ----
 
 === starting producers: `iot`
 
 ----
-java -classpath StreamAnalytics-0.0.3.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
+java -classpath StreamAnalytics-0.1.0.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
 ----
 
 === Console output
 
 [source,shell script]
 ----
-./bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic iot --property print.key=true --property key.separator=" - "
+./bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic iot --property print.key=true --property key.separator=" - "
 
 1636190810020:26 - {"sensor_ts":1636190810020,"sensor_id":26,"sensor_0":5,"sensor_1":9,"sensor_2":7,"sensor_3":29,"sensor_4":2,"sensor_5":39,"sensor_6":4,"sensor_7":46,"sensor_8":84,"sensor_9":45,"sensor_10":640,"sensor_11":1090}
 1636190810225:30 - {"sensor_ts":1636190810225,"sensor_id":30,"sensor_0":5,"sensor_1":6,"sensor_2":18,"sensor_3":24,"sensor_4":39,"sensor_5":47,"sensor_6":35,"sensor_7":37,"sensor_8":42,"sensor_9":40,"sensor_10":842,"sensor_11":482}
@@ -37,7 +37,7 @@ Kafka CLI utility:
 
 [source,shell script]
 ----
-./bin/kafka-console-producer.sh --bootstrap-server kafka:9092 --topic refdata_qa --property "parse.key=true" --property "key.separator= - "
+./bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic refdata_qa --property "parse.key=true" --property "key.separator= - "
 ----
 example qa ref. values
 [source,shell script]
@@ -50,7 +50,7 @@ default.IoT_Raw.sensor_2 - {"table_field":"default.IoT_Raw_sensor_2","lastValue"
 For the verification we can use again the Kafka CLI utilities:
 [source,shell script]
 ----
-./bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic refdata_qa --from-beginning  --property print.key=true --property key.separator=" - "
+./bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic refdata_qa --from-beginning  --property print.key=true --property key.separator=" - "
 ----
 example result qa ref. values
 [source,shell script]
@@ -87,7 +87,7 @@ CREATE TEMPORARY TABLE `refdata_qa` (
 ) COMMENT 'refdata_qa'
 WITH (
   'connector' = 'upsert-kafka',
-  'properties.bootstrap.servers' = 'kafka:9092',
+  'properties.bootstrap.servers' = 'localhost:9092',
   'properties.auto.offset.reset' = 'earliest',
   'properties.request.timeout.ms' = '120000',
   'properties.transaction.timeout.ms' = '900000',
@@ -120,7 +120,7 @@ CREATE TEMPORARY TABLE `IoT_Raw` (
   WATERMARK FOR `eventTimestamp` AS `eventTimestamp` - INTERVAL '3' SECOND
 ) COMMENT 'IoT_Raw'
 WITH (
-  'properties.bootstrap.servers' = 'kafka:9092',
+  'properties.bootstrap.servers' = 'localhost:9092',
   'properties.auto.offset.reset' = 'earliest',
   'connector' = 'kafka',
   'format' = 'json',

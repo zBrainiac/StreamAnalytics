@@ -17,7 +17,7 @@ import java.util.Properties;
  *
  * run:
  * cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- * java -classpath StreamAnalytics-0.0.3.0.jar producer.RefDataGeoLocation
+ * java -classpath StreamAnalytics-0.1.0.0.jar producer.RefDataGeoLocation
  *
  * @author Marcel Daeppen
  * @version 2021/08/07 14:28
@@ -28,7 +28,7 @@ public class RefDataGeoLocation {
     private static final Logger LOG = LoggerFactory.getLogger(RefDataGeoLocation.class);
     private static final String LOGGERMSG = "Program prop set {}";
 
-    private static String brokerURI = "kafka:9092";
+    private static String brokerURI = "localhost:9092";
     private static long sleeptime = 111;
 
 

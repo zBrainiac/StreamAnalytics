@@ -19,7 +19,7 @@ import static java.util.Collections.unmodifiableList;
 /**
  * run:
  *   cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- *   java -classpath StreamAnalytics-0.0.3.0.jar producer.CurrencyCodeISO localhost:9092
+ *   java -classpath StreamAnalytics-0.1.0.0.jar producer.CurrencyCodeISO localhost:9092
  *
  * @author Marcel Daeppen
  * @version 2021/11/03 08:28
@@ -31,7 +31,7 @@ public class CurrencyCodeISO {
     private static final Logger LOG = LoggerFactory.getLogger(CurrencyCodeISO.class);
     private static final Random random = new SecureRandom();
     private static final String LOGGERMSG = "Program prop set {}";
-    private static String brokerURI = "kafka:9092";
+    private static String brokerURI = "localhost:9092";
     private static long sleeptime = 1000;
     private static final List<String> transaction_currency_list = unmodifiableList(Arrays.asList(
             "USD", "EUR", "CHF"));

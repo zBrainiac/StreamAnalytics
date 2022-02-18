@@ -36,7 +36,7 @@ WITH (
 
   'connector' = 'kafka',
   'topic' = 'iot',
-  'properties.bootstrap.servers' = 'kafka:9092',
+  'properties.bootstrap.servers' = 'localhost:9092',
   'properties.auto.offset.reset' = 'earliest',
   'format' = 'json',
   'scan.startup.mode' = 'earliest-offset',

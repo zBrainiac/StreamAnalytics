@@ -28,7 +28,7 @@ public class FSIFXRates {
     private static final Logger LOG = LoggerFactory.getLogger(FSIFXRates.class);
     private static final Random random = new SecureRandom();
     private static final String LOGGERMSG = "Program prop set {}";
-    private static String brokerURI = "kafka:9092";
+    private static String brokerURI = "localhost:9092";
     private static long sleeptime = 1000;
 
     public static void main(String[] args) throws Exception {

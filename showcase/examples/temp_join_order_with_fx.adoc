@@ -7,21 +7,21 @@ image::../../images/TemporalJoinTransactionWithLatestFX.png[width=800]
 == download generator:
 [source,bash]
 ----
-wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.3/StreamAnalytics-0.0.3.0.jar
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.1.0/StreamAnalytics-0.1.0.0.jar
 ----
 
 === starting producers: `CurrencyCodeISO`
 
 [source,shell script]
 ----
-java -classpath StreamAnalytics-0.0.3.0.jar producer.CurrencyCodeISO localhost:9092
+java -classpath StreamAnalytics-0.1.0.0.jar producer.CurrencyCodeISO localhost:9092
 ----
 
 === Console output
 
 [source,shell script]
 ----
- ./bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic currency_code_iso --property print.key=true --property key.separator=" - "
+ ./bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic currency_code_iso --property print.key=true --property key.separator=" - "
 
 USD - {"currency_code":"USD","eur_rate":1.08,"rate_time":"2021-11-08T13:25:45.083Z"}
 EUR - {"currency_code":"EUR","eur_rate":0.93,"rate_time":"2021-11-08T13:25:46.088Z"}
@@ -33,14 +33,14 @@ CHF - {"currency_code":"CHF","eur_rate":0.96,"rate_time":"2021-11-08T13:25:50.11
 === starting producers: `Transactions`
 
 ----
-java -classpath StreamAnalytics-0.0.3.0.jar producer.Transactions localhost:9092
+java -classpath StreamAnalytics-0.1.0.0.jar producer.Transactions localhost:9092
 ----
 
 === Console output
 
 [source,shell script]
 ----
-./bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic transactions --property print.key=true --property key.separator=" - "
+./bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic transactions --property print.key=true --property key.separator=" - "
 
 5176-6373-2578-5246 - {"trx_id":"5176-6373-2578-5246","currency_code":"CHF","total":6387.066426337466,"transaction_time":"2021-11-08T13:52:10.251Z"}
 5193-2518-9505-8993 - {"trx_id":"5193-2518-9505-8993","currency_code":"EUR","total":3472.0605449328446,"transaction_time":"2021-11-08T13:52:10.459Z"}
@@ -62,7 +62,7 @@ The default login and password are “admin" / "admin”.
 [source,sql]
 ----
 SHOW Tables;
-DROP TABLE currency_code_iso;
+DROP TABLE currency_code_iso IF EXISTS;
 
 CREATE TABLE currency_code_iso (
   `currency_code` STRING,
@@ -73,7 +73,7 @@ CREATE TABLE currency_code_iso (
 ) WITH (
   'connector' = 'upsert-kafka',
   'topic' = 'currency_code_iso',
-  'properties.bootstrap.servers' = 'kafka:9092',
+  'properties.bootstrap.servers' = 'localhost:9092',
   'key.format' = 'raw',
   'properties.group.id' = 'currency_code_iso',
   'value.format' = 'json',
@@ -82,7 +82,7 @@ CREATE TABLE currency_code_iso (
 
 SELECT * FROM currency_code_iso ;
 
-DROP TABLE transactions ;
+DROP TABLE transactions IF EXISTS;
 
 CREATE TABLE transactions (
   `trx_id` STRING,
@@ -93,7 +93,7 @@ CREATE TABLE transactions (
 ) WITH (
   'connector' = 'kafka',
   'topic' = 'transactions',
-  'properties.bootstrap.servers' = 'kafka:9092',
+  'properties.bootstrap.servers' = 'localhost:9092',
   'key.format' = 'raw',
   'key.fields' = 'trx_id',
   'value.format' = 'json',

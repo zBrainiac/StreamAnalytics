@@ -39,10 +39,11 @@ docker volume rm $(docker volume ls -q)
 == Example Application
 === use case description
 . Hello world in Streaming - xref:showcase/examples/hello_world.adoc[details]
-. Temporal join of Iot / Sensor data with the latest Geo Location from RefData - xref:showcase/examples/temp_join_IoT_with_RefDataLookup.adoc[details]
-. Join, computing and publish aggregation results in kafka - xref:showcase/examples/temp_join_IoT_with_RefDataLookup_Insert_into_topic.adoc[details]
-. Expose steaming events via REST API - xref:showcase/examples/temp_join_IoT_with_RefDataLookup_Insert_into_mat-view.adoc[details]
-. trigger webhook based on SQL result - xref:showcase/examples/temp_join_IoT_with_RefDataLookup_Insert_into_webhook.adoc[details]
+. End-to-End example: - xref:showcase/examples/temp_join_IoT_with_RefDataLookup_e2e.adoc[details]
+.. Create basic tables
+.. Join, computing and publish aggregation results in Kafka topic
+.. Expose steaming events via REST API
+.. Trigger webhook based on SQL result
 
 === How do
 
@@ -53,7 +54,7 @@ docker volume rm $(docker volume ls -q)
 === download generator:
 [source,shell script]
 ----
-wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.3/StreamAnalytics-0.0.3.0.jar
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.1.0/StreamAnalytics-0.1.0.0.jar
 ----
 
 
@@ -61,9 +62,9 @@ wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalyt
 === some CLI commands to interact with Kafka
 [source,shell script]
 ----
-./bin/kafka-topics.sh --list --bootstrap-server kafka:9092
-./bin/kafka-topics.sh --delete --bootstrap-server kafka:9092 --topic currency_code_iso  &&
-./bin/kafka-topics.sh --delete --bootstrap-server kafka:9092 --topic transactions &&
+./bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+./bin/kafka-topics.sh --delete --bootstrap-server localhost:9092 --topic currency_code_iso  &&
+./bin/kafka-topics.sh --delete --bootstrap-server localhost:9092 --topic transactions &&
 ----
 
 == debugging in CSA CE

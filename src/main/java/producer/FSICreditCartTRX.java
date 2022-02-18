@@ -35,7 +35,7 @@ class FSICreditCartTRX {
     private static final List<String> transaction_currency_list = unmodifiableList(Arrays.asList(
             "USD", "EUR", "CHF"));
 
-    private static String brokerURI = "kafka:9092";
+    private static String brokerURI = "localhost:9092";
     private static long sleeptime = 333;
 
     public static void main(String[] args) throws Exception {

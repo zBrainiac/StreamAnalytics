@@ -22,7 +22,7 @@ import static java.util.Collections.unmodifiableList;
 /**
  * run:
  * cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- * java -classpath StreamAnalytics-0.0.3.0.jar producer.Transactions kafka:9092
+ * java -classpath StreamAnalytics-0.1.0.0.jar producer.Transactions localhost:9092
  *
  * @author Marcel Daeppen
  * @version 2021/11/03 08:21

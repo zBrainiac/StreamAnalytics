@@ -10,14 +10,14 @@ image::../../images/TemporalJoinIoTSensorWithLatestGeoLocInsertIntoWebHook.png[w
 == download generator:
 [source,bash]
 ----
-wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.0.3/StreamAnalytics-0.0.3.0.jar
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.1.0/StreamAnalytics-0.1.0.0.jar
 ----
 
 === starting producers: `RefData_GeoLocation`
 
 [source,shell script]
 ----
-java -classpath StreamAnalytics-0.0.3.0.jar producer.RefDataGeoLocation localhost:9092
+java -classpath StreamAnalytics-0.1.0.0.jar producer.RefDataGeoLocation localhost:9092
 ----
 
 === Console output
@@ -27,7 +27,7 @@ _--key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"_
 
 [source,shell script]
 ----
-./bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic refdata_geoLocation --property print.key=true --property key.separator=" - " --key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"
+./bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic refdata_geoLocation --property print.key=true --property key.separator=" - " --key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"
 0 - {"loc_id":0,"city":"Porrentruy","lon":47.415327,"lat":7.075221}
 1 - {"loc_id":1,"city":"Geneva","lon":46.195602,"lat":6.148113}
 2 - {"loc_id":2,"city":"Zürich","lon":47.366667,"lat":8.55}
@@ -41,14 +41,14 @@ _--key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"_
 === starting producers: `iot`
 
 ----
-java -classpath StreamAnalytics-0.0.3.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
+java -classpath StreamAnalytics-0.1.0.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
 ----
 
 === Console output
 
 [source,shell script]
 ----
-./bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic iot --property print.key=true --property key.separator=" - "
+./bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic iot --property print.key=true --property key.separator=" - "
 
 1636190810020:26 - {"sensor_ts":1636190810020,"sensor_id":26,"sensor_0":5,"sensor_1":9,"sensor_2":7,"sensor_3":29,"sensor_4":2,"sensor_5":39,"sensor_6":4,"sensor_7":46,"sensor_8":84,"sensor_9":45,"sensor_10":640,"sensor_11":1090}
 1636190810225:30 - {"sensor_ts":1636190810225,"sensor_id":30,"sensor_0":5,"sensor_1":6,"sensor_2":18,"sensor_3":24,"sensor_4":39,"sensor_5":47,"sensor_6":35,"sensor_7":37,"sensor_8":42,"sensor_9":40,"sensor_10":842,"sensor_11":482}
@@ -73,7 +73,7 @@ Quick intro in how to use the Streaming SQL Console: https://docs.cloudera.com/c
 [source,sql]
 ----
 SHOW Tables;
-DROP TABLE `RefData_GeoLocation`;
+DROP TABLE `RefData_GeoLocation` IF EXISTS;
 
 CREATE TABLE `RefData_GeoLocation` (
   `loc_id` INT,
@@ -87,14 +87,14 @@ CREATE TABLE `RefData_GeoLocation` (
 WITH (
   'connector' = 'upsert-kafka',
   'topic' = 'refdata_geoLocation',
-  'properties.bootstrap.servers' = 'kafka:9092',
+  'properties.bootstrap.servers' = 'localhost:9092',
   'properties.group.id' = 'RefData_GeoLocation',
   'key.format' = 'raw',
   'value.format' = 'json'
 );
 
 
-DROP TABLE `IoT_Raw`;
+DROP TABLE `IoT_Raw` IF EXISTS;
 
 CREATE TABLE `IoT_Raw` (
   `sensor_ts` BIGINT,
@@ -117,7 +117,7 @@ CREATE TABLE `IoT_Raw` (
 WITH (
   'connector' = 'kafka',
   'topic' = 'iot',
-  'properties.bootstrap.servers' = 'kafka:9092',
+  'properties.bootstrap.servers' = 'localhost:9092',
   'properties.auto.offset.reset' = 'earliest',
   'format' = 'json',
   'scan.startup.mode' = 'earliest-offset',

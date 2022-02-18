@@ -1,26 +1,29 @@
-= Temporal join of IoT events with the geolocation reference data
+= End-to-End example
 
-same as before: Both tables `IoT` (insert) and `RefData_GeoLocation` (upsert) are representing a Kafka topic.
+Before we start with the first _Stream Analytics_ lab we have to set up the local infrastructure.
 
-But this time we publish the results of the continuously running SQL into new Kafka topic (sink).
+==  Add `kafka` to /etc/hosts:
 
-== Use case overview:
-image::../../images/TemporalJoinIoTSensorWithLatestGeoLocInsertIntoKafka.png[width=800]
+On Unix based environments you can do it with the following command as an alternative you can also modify /etc/hots with your favorite editor.
 
-== download generator:
+```
+sudo -- sh -c -e "echo '127.0.0.1   kafka' >> /etc/hosts"
+```
+
+== download event generator:
 [source,bash]
 ----
 wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.1.0/StreamAnalytics-0.1.0.0.jar
 ----
 
-=== starting producers: `RefData_GeoLocation`
+==== starting producers: `RefData_GeoLocation`
 
 [source,shell script]
 ----
 java -classpath StreamAnalytics-0.1.0.0.jar producer.RefDataGeoLocation localhost:9092
 ----
 
-=== Console output
+==== Console output
 After the key is defined as an integer, an additional parameter must be given to the kafka-console-consumer:
 
 _--key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"_
@@ -38,13 +41,13 @@ _--key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"_
 ...
 ----
 
-=== starting producers: `iot`
+==== starting producers: `iot`
 
 ----
 java -classpath StreamAnalytics-0.1.0.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
 ----
 
-=== Console output
+==== Console output
 
 [source,shell script]
 ----
@@ -59,7 +62,8 @@ java -classpath StreamAnalytics-0.1.0.0.jar producer.IoTSensorSimulatorAnomaly l
 
 ...
 ----
-==  Create new Kafka topic
+
+==  Create new Kafka topic for the query result
 
 Get all running containers with `docker ps`
 
@@ -112,7 +116,7 @@ iot
 refdata_geoLocation
 sensor6_stats
 
-kafka@35b0e660b2de:/opt/kafka
+kafka@35b0e660b2de:/opt/kafka$ exit
 
 ----
 
@@ -123,7 +127,7 @@ The default login and password are “admin" / "admin”.
 
 Quick intro in how to use the Streaming SQL Console: https://docs.cloudera.com/csa/1.5.1/ssb-sql-console/topics/csa-ssb-using-console.html[official SSB DOC]
 
-=== Create a table
+=== Create basic tables
 
 [source,sql]
 ----
@@ -142,7 +146,7 @@ CREATE TABLE `RefData_GeoLocation` (
 WITH (
   'connector' = 'upsert-kafka',
   'topic' = 'refdata_geoLocation',
-  'properties.bootstrap.servers' = 'localhost:9092',
+  'properties.bootstrap.servers' = 'kafka:9092',
   'properties.group.id' = 'RefData_GeoLocation',
   'key.format' = 'raw',
   'value.format' = 'json'
@@ -172,13 +176,27 @@ CREATE TABLE `IoT_Raw` (
 WITH (
   'connector' = 'kafka',
   'topic' = 'iot',
-  'properties.bootstrap.servers' = 'localhost:9092',
+  'properties.bootstrap.servers' = 'kafka:9092',
   'properties.auto.offset.reset' = 'earliest',
   'format' = 'json',
   'scan.startup.mode' = 'earliest-offset',
   'properties.group.id' = 'iot'
 );
 ----
+
+[source,sql]
+----
+SHOW Tables;
+SELECT * FROM IoT_Raw
+SELECT count(*) FROM IoT_Raw
+----
+
+== Overview: use case - Publish results to Kafka[resultKafka]
+
+Both tables `IoT` and `RefData_GeoLocation` are representing a Kafka topic, but in the case of `RefData_GeoLocation` this topic is compacted (i.e. only the most recent messages for a given key (= loc_id) are kept as updated changes flow in). Records in `iot` are interpreted as inserts only, and so the table is backed by the standard Kafka connector = kafka); while the records in `RefData_GeoLocation` need to be interpreted as upserts based on a primary key, which requires the Upsert Kafka connector (connector = upsert-kafka).
+
+image::../../images/TemporalJoinIoTSensorWithLatestGeoLocInsertIntoKafka.png[width=800]
+
 
 === Create a query
 This query will compute aggregates over 30-seconds windows that slide forward every second. For a specific sensor value in the record (`sensor_6`) it computes the following aggregations for each window:
@@ -263,7 +281,7 @@ CREATE TABLE `sensor6_stats_source` (
     `sensorGreaterThan60` BIGINT,
     `eventTimestamp` TIMESTAMP(3) METADATA FROM 'timestamp',  WATERMARK FOR `eventTimestamp` AS `eventTimestamp` - INTERVAL '3' SECOND)
 WITH (
-  'properties.bootstrap.servers' = 'localhost:9092',
+  'properties.bootstrap.servers' = 'kafka:9092',
   'properties.auto.offset.reset' = 'earliest',
   'connector' = 'kafka',
   'format' = 'json',
@@ -279,6 +297,226 @@ Enter the following query in the SQL field and execute it:
 ----
 SELECT * FROM sensor6_stats_source ;
 ----
++
+[WARNING]
+====
+Make sure to stop your queries to release all resources once you finish. CSA CE is limited to a few worker tasks. You can double-check that all queries/jobs have been stopped by clicking on the SQL Jobs tab. If any jobs are still running, you can stop them from that page.
+====
+
+
+== Overview: Use case - Expose steaming events via REST API
+
+
+SQL Stream Builder can also take keyed snapshots of the data stream and make that available through a REST interface in the form of materialized views. In this lab you’ll create and query Materialized Views (MV).
+
+System setup same as before: Both tables `IoT` (insert) and `RefData_GeoLocation` (upsert) are representing a Kafka topic.
+
+image::../../images/TemporalJoinIoTSensorWithLatestGeoLocInsertIntoREST.png[width=800]
+
+=== Create a query
+
+On the SSB UI:
+
+. Click on Console (on the left bar) *> Compose > SQL*
++
+. Enter `Expose_IoTLoc` for the *SQL Job Name* field.
++
+. In the SQL box type the query shown below.
++
+[source,sql]
+----
+SELECT
+  i.`sensor_ts`,
+  i.`sensor_id` as `device_id`,
+  i.`sensor_0`,
+  geo.`city`,
+  geo.`lon`,
+  geo.`lat`
+FROM `IoT_Raw` i
+JOIN `RefData_GeoLocation` FOR SYSTEM_TIME AS OF i.`eventTimestamp` AS geo
+ON i.`sensor_id` = geo.`loc_id`;
+----
++
+. In order to add Materialized Views to a query the job needs to be stopped. On the job page, click the Stop button to pause the job.
+
+. Click on the *Materialized View* tab and set the following properties:
++
+[source,python]
+----
+Materialized View:     Enabled
+Primary Key:           device_id
+Retention:             300
+Ignore NULLs:          Yes
+----
++
+image::../../images/mv-config1.png[width=300]
+
+. To create a MV you need to have an API Key.
+The API key is the information given to clients so that they can access the MVs.
+If you have multiple MVs and want them to be accessed by different clients you can have multiple API keys to control access to the different MVs.
++
+If you have already created an API Key in SSB you can select it from the drop-down list.
+Otherwise, create one on the spot by clicking on the *Add API Key* button shown above.
+Use `ssb-lab` as the Key Name.
+
+. Click *Add Query* to create a new MV.
+You will create a view that shows all the devices for which `sensor6` has had at least 1 reading above 60 in the last recorded 30-second window.
+For this, enter the following parameters in the MV Query Configuration page:
++
+[source,python]
+----
+URL Pattern:   IoT_all
+Query Builder: <click "Select All" to add all columns>
+----
++
+image::../../images/mv-config2.png[width=400]
+
+. Click *Save Changes*.
+
+. Go back to the *SQL* tab and click on *Execute* to start the job.
+
+. On the *Materialized Views* tab, copy the new MV URL that's shown on the screen and open it in a new browser tab (or simply click on the URL link).
+You will see the content of the MV current snapshot.
++
+If you refresh the page a few times you will notice that the MV snapshot is updated as new data points are coming through the stream.
++
+SSB keeps the last state of the data for each value of the defined primary key.
++
+image::../../images/mv-contents.png[width=800]
+
+==== Materialized View with parameters
+
+The MV you created above takes no parameters; it always returns the full content of the MV when you call the REST endpoint.
+It is possible to specify parameters for a MV so that you can filter the contents at query time.
+
+In this section you will create a new MV that allows filtering by specifying a range for the `sensorAverage` column.
+
+. First, stop the job again so that you can add another MV.
+
+. On the *Materialized Views* tab, click on the *Add Query* button to create a new MV, enter the following parameter and click *Save Changes*.
++
+[source,python]
+----
+URL Pattern:   IoT_all/{device_id}
+Query Builder: <click "Select All" to add all columns>
+Filters:       device_id  equal  {device_id}
+----
++
+image::../../images/mv-config3.png[width=400]
+
+. You will notice that the new URL for this MV has a placeholder for the `{device_id}` parameter:
++
+
+. Go back to the *SQL* tab and execute the job again.
+
+. Click on the *Materialize Views* tab, and copy&paste the link for the MV that you just created.
+
+. Adjust {device_id} in the URI with a valid value e.g. 12
+
++
+[WARNING]
+====
+Make sure to stop your queries to release all resources once you finish. CSA CE is limited to a few worker tasks. You can double-check that all queries/jobs have been stopped by clicking on the SQL Jobs tab. If any jobs are still running, you can stop them from that page.
+====
+
+
+== Overview: Use case - Perform an HTTP action (webhook)
+
+Webhooks are _"user-defined HTTP callbacks"_. They are usually triggered by some event, such an action being triggered by a user or an alarm fired up. When that event occurs, the source site makes an HTTP request to the URL configured for the webhook. Users can configure them to cause events on one site to invoke behavior on another.
+
+System setup same as before: Both tables `IoT` (insert) and `RefData_GeoLocation` (upsert) are representing a Kafka topic.
+
+image::../../images/TemporalJoinIoTSensorWithLatestGeoLocInsertIntoWebHook.png[width=800]
+
+First you have to configure the *webhook table* to perform an HTTP action per message (sql result).
+
+WARNING: Open new browser in _incognito mode_ and create a new http endpoint at https://webhook.site
+
+. Select Console from the main menu.
+. Select the *Tables* tab.
+. Select *Add table > Webhook*. The *Webhook Table* window appears.
++
+
+[source,shell]
+----
+Table name              webhook_table
+Http EndPoint           webhook <Your unique URL endpoint https:// >
+HttpMethod              POST
+Disable SSL Validation  no
+Enable Request Template yes
+----
++
+. In the *Code* tab, you can specify a code block that controls how the webhook displays the data.
+For a webhook that is called for each message the following code is used:
++
+image::../../images/ssb-webhooktable-code.png[width=600]
++
+[source,javascript]
+----
+// Boolean function that takes entire row from query as Json Object
+function onCondition(rowAsJson)
+{return true;   // return false here for no-op, or plug in custom
+        logic}
+onCondition($p0)
+----
++
+. On the *Http Headers* tab, add HTTP headers using the HTTP Headers tab, if needed.
++
+image::../../images/ssb-webhooktable-httpheader.png[width=600]
++
+[source,shell]
+----
+Http Header     Content-Type
+Value           application/json
+----
++
+. Press the *Add Header* sign to save
+. On the *Request Template* tab modify template
++
+image::../../images/ssb-webhooktable-requesttemplate.png[width=600]
++
+[source,javascript]
+----
+{
+   "incident":{
+      "type":"incident",
+      "title":"${sensor_id} - pressure is too high!",
+        "body":{
+   "type":"incident_body",
+         "details":"Sensor with id ${sensor_id} has ${sensor_0} pascal, City:${city}, GeoLoc:${lon},${lat}"
+      }
+    }
+}
+----
+. Click *Save changes*
+
+=== Create a query
+On the SSB UI:
+
+. Click on Console (on the left bar) *> Compose > SQL*
++
+. Enter `webhook_IoTLoc` for the *SQL Job Name* field.
++
+. In the SQL box type the query shown below.
++
+[source,sql]
+----
+INSERT INTO webhook_table
+SELECT
+  i.`sensor_ts`,
+  i.`sensor_id`,
+  i.`sensor_0`,
+  geo.`city`,
+  geo.`lon`,
+  geo.`lat`
+FROM `IoT_Raw` i
+JOIN `RefData_GeoLocation` FOR SYSTEM_TIME AS OF i.`eventTimestamp` AS geo
+ON i.`sensor_id` = geo.`loc_id`;
+----
++
+. Click *Execute* query
+. Back on the https://webhook.site page you will see the submitted messages
+
 +
 [WARNING]
 ====
