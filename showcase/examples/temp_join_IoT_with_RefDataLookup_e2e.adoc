@@ -24,6 +24,8 @@ java -classpath StreamAnalytics-0.1.0.0.jar producer.RefDataGeoLocation localhos
 ----
 
 ==== Console output
+If you don't have a local Kafka installation log into the docker container where Kafka is running (see below) and execute the following command.
+
 After the key is defined as an integer, an additional parameter must be given to the kafka-console-consumer:
 
 _--key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"_
@@ -48,6 +50,7 @@ java -classpath StreamAnalytics-0.1.0.0.jar producer.IoTSensorSimulatorAnomaly l
 ----
 
 ==== Console output
+If you don't have a local Kafka installation log into the docker container where Kafka is running (see below) and execute the following command:
 
 [source,shell script]
 ----
@@ -132,7 +135,7 @@ Quick intro in how to use the Streaming SQL Console: https://docs.cloudera.com/c
 [source,sql]
 ----
 SHOW Tables;
-DROP TABLE `RefData_GeoLocation` IF EXISTS;
+DROP TABLE `RefData_GeoLocation`;
 
 CREATE TABLE `RefData_GeoLocation` (
   `loc_id` INT,
@@ -153,7 +156,7 @@ WITH (
 );
 
 
-DROP TABLE `IoT_Raw` IF EXISTS;
+DROP TABLE `IoT_Raw`;
 
 CREATE TABLE `IoT_Raw` (
   `sensor_ts` BIGINT,
