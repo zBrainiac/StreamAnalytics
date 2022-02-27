@@ -21,7 +21,7 @@ import java.util.Random;
  * java -classpath StreamAnalytics-0.1.0.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
  *
  * @author Marcel Daeppen
- * @version 2021/08/07 14:28
+ * @version 2022/02/07 14:28
  */
 
 public class IoTSensorSimulatorAnomaly {
@@ -32,7 +32,7 @@ public class IoTSensorSimulatorAnomaly {
     private static final String LOGGERMSG = "Program prop set {}";
 
     private static String brokerURI = "localhost:9092";
-    private static long sleeptime = 200;
+    private static long sleeptime = 100;
 
     public static void main(String[] args) throws Exception {
 
@@ -62,34 +62,48 @@ public class IoTSensorSimulatorAnomaly {
         try (Producer<String, byte[]> producer = new KafkaProducer<>(config)) {
 
             WeightedRandomBag<Integer> itemDrops = new WeightedRandomBag<>();
-            itemDrops.addEntry(0, 1.0);
-            itemDrops.addEntry(1, 999.0);
+            itemDrops.addEntry(0, 5.0);
+            itemDrops.addEntry(1, 20.0);
+            itemDrops.addEntry(2, 50.0);
+            itemDrops.addEntry(3, 15.0);
+            itemDrops.addEntry(4, 10.0);
 
             //prepare the record
 
             for (int i = 0; i < 1000000; i++) {
                 Integer part = itemDrops.getRandom();
 
-                if (part != 1) {
-                    ObjectNode messageJsonObject = jsonObjectAnomaly();
-                    byte[] valueJson = objectMapper.writeValueAsBytes(messageJsonObject);
-
-                    final ObjectNode node = new ObjectMapper().readValue(valueJson, ObjectNode.class);
-                    String key = node.get("sensor_ts") + ":" + node.get("sensor_id");
-
-                    ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("iot", key, valueJson);
-                    RecordMetadata msg = producer.send(eventrecord).get();
-                    LOG.info(String.format("Published %s/%d/%d : %s", msg.topic(), msg.partition(), msg.offset(), jsonObjectAnomaly()));
-                } else {
+                if (part == 1){
                     ObjectNode messageJsonObject = jsonObject();
                     byte[] valueJson = objectMapper.writeValueAsBytes(messageJsonObject);
 
                     final ObjectNode node = new ObjectMapper().readValue(valueJson, ObjectNode.class);
-                    String key = node.get("sensor_ts") + ":" + node.get("sensor_id");
+                    String key = String.valueOf(node.get("sensor_id"));
 
                     ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("iot", key, valueJson);
                     RecordMetadata msg = producer.send(eventrecord).get();
-                    LOG.info(String.format("Published %s/%d/%d : %s", msg.topic(), msg.partition(), msg.offset(), jsonObject()));
+                    LOG.info(new StringBuilder().append("Published ")
+                            .append(msg.topic()).append("/")
+                            .append(msg.partition()).append("/")
+                            .append(msg.offset()).append(" : ")
+                            .append(jsonObjectAnomaly())
+                            .toString());
+                }
+                else{
+                    ObjectNode messageJsonObject = jsonObjectAnomaly();
+                    byte[] valueJson = objectMapper.writeValueAsBytes(messageJsonObject);
+
+                    final ObjectNode node = new ObjectMapper().readValue(valueJson, ObjectNode.class);
+                    String key = String.valueOf(node.get("sensor_id"));
+
+                    ProducerRecord<String, byte[]> eventrecord = new ProducerRecord<>("iot", key, valueJson);
+                    RecordMetadata msg = producer.send(eventrecord).get();
+                    LOG.info(new StringBuilder().append("Published ")
+                            .append(msg.topic()).append("/")
+                            .append(msg.partition()).append("/")
+                            .append(msg.offset()).append(" : ")
+                            .append(jsonObject())
+                            .toString());
                 }
 
 
@@ -125,7 +139,7 @@ public class IoTSensorSimulatorAnomaly {
 
         ObjectNode report = objectMapper.createObjectNode();
         report.put("sensor_ts", Instant.now().toEpochMilli());
-        report.put("sensor_id", (random.nextInt(3)));
+        report.put("sensor_id", (random.nextInt(7)));
         report.put("sensor_0", (random.nextInt(9)) + 99);
         report.put("sensor_1", (random.nextInt(11)) * 11);
         report.put("sensor_2", (random.nextInt(22)));
@@ -137,7 +151,7 @@ public class IoTSensorSimulatorAnomaly {
         report.put("sensor_8", (random.nextInt(88)));
         report.put("sensor_9", (random.nextInt(99)));
         report.put("sensor_10", (random.nextInt(1010)));
-        report.put("sensor_13", (random.nextInt(1)));
+        report.put("sensor_11", (random.nextInt(1111)));
 
         return report;
     }
