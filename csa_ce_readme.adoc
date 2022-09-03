@@ -18,7 +18,7 @@ image::images/StreamingAnalytics_usage_pattern.png[width=800]
 == Quickstart kit
 
 === Downloading the docker-compose file
-Goto: https://www.cloudera.com/downloads/cdf/csa-community-edition.html
+Goto: https://docs.cloudera.com/csp-ce/latest/installation/topics/csp-ce-installing-ce.html
 
 
 === How to spin-up:
