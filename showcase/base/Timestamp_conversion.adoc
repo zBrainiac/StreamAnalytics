@@ -11,9 +11,9 @@ for more detail see official flink doc https://ci.apache.org/projects/flink/flin
 
 [source,sql]
 ----
-DROP TEMPORARY TABLE `IoT_Raw_Ts`;
+DROP TABLE `IoT_Raw_Ts`;
 
-CREATE TEMPORARY TABLE `IoT_Raw_Ts` (
+CREATE TABLE `IoT_Raw_Ts` (
   `sensor_ts` BIGINT, -- long time value in epoch milliseconds
   `ts_ltz` AS TO_TIMESTAMP_LTZ(`sensor_ts`, 3), -- convert into human readable Ts
   `sensor_id` INT,
@@ -33,16 +33,16 @@ CREATE TEMPORARY TABLE `IoT_Raw_Ts` (
   WATERMARK FOR `eventTimestamp` AS `eventTimestamp` - INTERVAL '3' SECOND
 ) COMMENT 'iot_enriched_source'
 WITH (
-
   'connector' = 'kafka',
   'topic' = 'iot',
-  'properties.bootstrap.servers' = 'localhost:9092',
+  'properties.bootstrap.servers' = 'kafka:9092',
   'properties.auto.offset.reset' = 'earliest',
   'format' = 'json',
   'scan.startup.mode' = 'earliest-offset',
-  'properties.group.id' = 'iot'
+  'properties.group.id' = 'iot-timestamp1'
 );
 
-SELECT * FROM IoT_Raw_Ts ;
 
+ -- example SQL
+SELECT sensor_ts, ts_ltz, sensor_id, sensor_0, sensor_1 FROM IoT_Raw_Ts ;
 ----

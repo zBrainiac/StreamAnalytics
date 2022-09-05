@@ -53,9 +53,9 @@ CHF - {"currency_code":"CHF","eur_rate":0.96,"rate_time":"2021-11-08T13:25:50.11
 [source,sql]
 ----
 SHOW Tables;
-DROP TEMPORARY TABLE currency_code;
+DROP TABLE currency_code;
 
-CREATE TEMPORARY TABLE currency_code (
+CREATE TABLE currency_code (
   `currency_code` STRING,
   `eur_rate` DECIMAL(6,4),
   `rate_time` TIMESTAMP(3),
@@ -64,7 +64,7 @@ CREATE TEMPORARY TABLE currency_code (
 ) WITH (
   'connector' = 'upsert-kafka',
   'topic' = 'currency_code',
-  'properties.bootstrap.servers' = 'localhost:9092',
+  'properties.bootstrap.servers' = 'kafka:9092',
   'key.format' = 'raw',
   'properties.group.id' = 'currency_code',
   'value.format' = 'json'
@@ -77,7 +77,7 @@ For the processing of ISO 8601:2004 Timestamp with UTC you must use the followin
 
 [source,sql]
 ----
-CREATE TEMPORARY TABLE currency_code_iso (
+CREATE TABLE currency_code_iso (
 `currency_code` STRING,
 `eur_rate` DECIMAL(6,4),
 `rate_time` TIMESTAMP_LTZ(3),  -- TIMESTAMP_LTZ describes an absolute time point on the time-line
@@ -86,9 +86,13 @@ PRIMARY KEY (currency_code) NOT ENFORCED
 ) WITH (
 'connector' = 'upsert-kafka',
 'topic' = 'currency_code_iso',
-'properties.bootstrap.servers' = 'localhost:9092',
+'properties.bootstrap.servers' = 'kafka:9092',
 'key.format' = 'raw',
 'value.format' = 'json',
 'value.json.timestamp-format.standard' = 'ISO-8601'  -- Timestamp format definion
 );
+
+
+-- example SQL
+SELECT * FROM currency_code_iso ;
 ----
