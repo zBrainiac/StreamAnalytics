@@ -22,7 +22,7 @@ import java.util.Properties;
  * <p>
  * run:
  * cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- * java -classpath java -classpath StreamAnalytics-0.1.0.0.jar producer.LookupWeatherCondition
+ * java -classpath java -classpath StreamAnalytics-0.2.0.0.jar producer.LookupWeatherCondition
  *
  * @author Marcel Daeppen
  * @version 2021/08/07 14:28

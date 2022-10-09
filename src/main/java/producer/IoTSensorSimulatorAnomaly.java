@@ -18,7 +18,7 @@ import java.util.Random;
 /**
  * run:
  * cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- * java -classpath StreamAnalytics-0.1.0.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
+ * java -classpath StreamAnalytics-0.2.0.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
  *
  * @author Marcel Daeppen
  * @version 2022/02/07 14:28

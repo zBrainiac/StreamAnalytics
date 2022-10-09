@@ -17,7 +17,7 @@ import java.util.Properties;
  *
  * run:
  * cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- * java -classpath StreamAnalytics-0.1.0.0.jar producer.RefDataGeoLocation
+ * java -classpath StreamAnalytics-0.2.0.0.jar producer.RefDataGeoLocation
  *
  * @author Marcel Daeppen
  * @version 2021/08/07 14:28

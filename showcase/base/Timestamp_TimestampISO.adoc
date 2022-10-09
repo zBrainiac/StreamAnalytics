@@ -6,7 +6,7 @@ I strongly recommend always using timestamps with a clear relation to UTC or eve
 
 [source,shell script]
 ----
-java -classpath StreamAnalytics-0.1.0.0.jar producer.CurrencyCode localhost:9092
+java -classpath StreamAnalytics-0.2.0.0.jar producer.CurrencyCode localhost:9092
 ----
 
 === Console output
@@ -29,7 +29,7 @@ EUR - {"currency_code":"EUR","eur_rate":0.92,"rate_time":"2021-11-04 16:16:20.02
 
 [source,shell script]
 ----
-java -classpath StreamAnalytics-0.1.0.0.jar producer.CurrencyCodeISO localhost:9092
+java -classpath StreamAnalytics-0.2.0.0.jar producer.CurrencyCodeISO localhost:9092
 ----
 
 === Console output

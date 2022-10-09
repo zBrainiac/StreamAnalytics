@@ -19,10 +19,10 @@ import static java.util.Collections.unmodifiableList;
 /**
  * run:
  * cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- * java -classpath kafka-producer-0.0.3.0.jar producer.FSICreditCartTRX localhost:9092
+ * java -classpath StreamAnalytics-0.2.0.0.jar producer.FSICreditCartTRX localhost:9092
  *
  * @author Marcel Daeppen
- * @version 2021/08/07 14:28
+ * @version 2022/09/17 12:31
  */
 
 class FSICreditCartTRX {
@@ -90,7 +90,7 @@ class FSICreditCartTRX {
         int i = random.nextInt(16);
 
         ObjectNode report = objectMapper.createObjectNode();
-        report.put("timestamp", System.currentTimeMillis());
+        report.put("cc_ts", System.currentTimeMillis());
         report.put("cc_id", "51" + (random.nextInt(89) + 10) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000));
         report.put("cc_type", transaction_card_type_list.get(random.nextInt(transaction_card_type_list.size())));
         report.put("shop_id", i);
@@ -128,8 +128,8 @@ class FSICreditCartTRX {
                 System.err.println("i out of range");
         }
 
-        report.put("fx", transaction_currency_list.get(random.nextInt(transaction_currency_list.size())));
-        report.put("fx_account", transaction_currency_list.get(random.nextInt(transaction_currency_list.size())));
+        report.put("fx_exch_currency", transaction_currency_list.get(random.nextInt(transaction_currency_list.size())) +  transaction_currency_list.get(random.nextInt(transaction_currency_list.size())));
+    //    report.put("fx_account", transaction_currency_list.get(random.nextInt(transaction_currency_list.size())));
         report.put("amount_orig", (random.nextInt(8900) + 10) / 100.0);
         return report;
     }

@@ -16,10 +16,10 @@ import java.util.Random;
 /**
  * run:
  *   cd /opt/cloudera/parcels/FLINK/lib/flink/examples/streaming &&
- *   java -classpath kafka-producer-0.0.1.0.jar producer.FSIFXRates localhost:9092
+ *   java -classpath StreamAnalytics-0.2.0.0.jar producer.FSIFXRates localhost:9092
  *
  * @author Marcel Daeppen
- * @version 2021/08/07 14:28
+ * @version 2022/09/17 12:31
  */
 
 public class FSIFXRates {
@@ -73,7 +73,7 @@ public class FSIFXRates {
 
 
         final ObjectNode node = new ObjectMapper().readValue(valueJson, ObjectNode.class);
-        String key = ((node.get("fx" )+ "_" + (node.get("fx_target")) ));
+        String key = (node.get("fx" ) + "_" + (node.get("fx_target")) );
         key = key.replace("\"", "");
 
         LOG.info(key);
@@ -94,52 +94,62 @@ public class FSIFXRates {
         report.put("fx_ts", System.currentTimeMillis());
 
         String fxRate = "fx_rate";
-        String fx_target = "fx_target";
+        String fxTarget = "fx_target";
+        String fxExch = "fx_exch";
 
         switch (i) {
             case 0:
                 report.put("fx", "CHF");
+                report.put(fxTarget, "CHF");
+                report.put(fxExch, "CHFCHF");
                 report.put(fxRate, 1.00);
-                report.put(fx_target, "CHF");
                 break;
             case 1:
                 report.put("fx", "CHF");
-                report.put(fx_target, "USD");
+                report.put(fxTarget, "USD");
+                report.put(fxExch, "CHFUSD");
                 report.put(fxRate, (random.nextInt(20) + 90) / 100.0);
                 break;
             case 2:
                 report.put("fx", "CHF");
-                report.put(fx_target, "EUR");
+                report.put(fxTarget, "EUR");
+                report.put(fxExch, "CHFEUR");
                 report.put(fxRate, (random.nextInt(20) + 90) / 100.0);
                 break;
             case 3:
                 report.put("fx", "EUR");
+                report.put(fxTarget, "EUR");
+                report.put(fxExch, "EUREUR");
                 report.put(fxRate, 1.00);
-                report.put(fx_target, "EUR");
                 break;
             case 4:
                 report.put("fx", "EUR");
-                report.put(fx_target, "USD");
+                report.put(fxTarget, "USD");
+                report.put(fxExch, "EURUSD");
                 report.put(fxRate, (random.nextInt(20) + 90) / 100.0);
                 break;
             case 5:
                 report.put("fx", "EUR");
-                report.put(fx_target, "CHF");
+                report.put(fxTarget, "CHF");
+                report.put(fxExch, "EURCHF");
                 report.put(fxRate, (random.nextInt(20) + 90) / 100.0);
                 break;
             case 6:
                 report.put("fx", "USD");
+                report.put(fxTarget, "USD");
+                report.put(fxExch, "USDUSD");
                 report.put(fxRate, 1.00);
-                report.put(fx_target, "USD");
                 break;
             case 7:
                 report.put("fx", "USD");
-                report.put(fx_target, "CHF");
+                report.put(fxTarget, "CHF");
+                report.put(fxExch, "USDCHF");
                 report.put(fxRate, (random.nextInt(20) + 90) / 100.0);
                 break;
             case 8:
                 report.put("fx", "USD");
-                report.put(fx_target, "EUR");
+                report.put(fxTarget, "EUR");
+                report.put(fxExch, "USDEUR");
                 report.put(fxRate, (random.nextInt(20) + 90) / 100.0);
                 break;
             default:

@@ -7,13 +7,13 @@ image::../../images/HelloWorld.png[width=800]
 == download generator:
 [source,bash]
 ----
-wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.1.0/StreamAnalytics-0.1.0.0.jar
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.1.0/StreamAnalytics-0.2.0.0.jar
 ----
 
 === starting producers: `iot`
 
 ----
-java -classpath StreamAnalytics-0.1.0.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
+java -classpath StreamAnalytics-0.2.0.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
 ----
 
 === Console output

@@ -10,14 +10,14 @@ image::../../images/TemporalJoinIoTSensorWithLatestGeoLocInsertIntoWebHook.png[w
 == download generator:
 [source,bash]
 ----
-wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.1.0/StreamAnalytics-0.1.0.0.jar
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.1.0/StreamAnalytics-0.2.0.0.jar
 ----
 
 === starting producers: `RefData_GeoLocation`
 
 [source,shell script]
 ----
-java -classpath StreamAnalytics-0.1.0.0.jar producer.RefDataGeoLocation localhost:9092
+java -classpath StreamAnalytics-0.2.0.0.jar producer.RefDataGeoLocation localhost:9092
 ----
 
 === Console output
@@ -41,7 +41,7 @@ _--key-deserializer "org.apache.kafka.common.serialization.IntegerDeserializer"_
 === starting producers: `iot`
 
 ----
-java -classpath StreamAnalytics-0.1.0.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
+java -classpath StreamAnalytics-0.2.0.0.jar producer.IoTSensorSimulatorAnomaly localhost:9092
 ----
 
 === Console output
