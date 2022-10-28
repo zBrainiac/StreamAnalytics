@@ -97,7 +97,7 @@ public class Transactions {
         report.put("cc_id", "51" + (random.nextInt(89) + 10) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000) + "-" + (random.nextInt(8999) + 1000));
         report.put("cc_type", transaction_card_type_list.get(random.nextInt(transaction_card_type_list.size())));
         report.put("customer_id", (random.nextInt(101)));
-        report.put("currency_code", transaction_currency_list.get(random.nextInt(transaction_currency_list.size())));
+        report.put("currency_code", transaction_currency_list.get(random.nextInt(transaction_currency_list.size())) + transaction_currency_list.get(random.nextInt(transaction_currency_list.size())));
         report.put("amount", (random.nextInt(98900) + 10) / 100.0);
         report.put("lon", ThreadLocalRandom.current().nextDouble(45.465337, 52.286143));
         report.put("lat", ThreadLocalRandom.current().nextDouble(4.559436, 29.234728));
