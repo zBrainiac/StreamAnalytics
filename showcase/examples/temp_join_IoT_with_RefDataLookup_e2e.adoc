@@ -13,7 +13,7 @@ sudo -- sh -c -e "echo '127.0.0.1   kafka' >> /etc/hosts"
 == download event generator:
 [source,bash]
 ----
-wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.1.0/StreamAnalytics-0.2.0.0.jar
+wget https://github.com/zBrainiac/StreamAnalytics/releases/download/StreamAnalytics_0.2.0/StreamAnalytics-0.2.0.0.jar
 ----
 
 ==== starting producers: `RefData_GeoLocation`
@@ -85,10 +85,10 @@ b61c270719e2   docker.repository.cloudera.com/csa/ssb-docker_postgresql:1.6.0.0-
 e40b8e0215fd   docker.repository.cloudera.com/csa/ssb-docker_flink:1.6.0.0-ce        "/usr/bin/init-flink…"   57 minutes ago   Up 57 minutes (healthy)   0.0.0.0:8081->8081/tcp                             ssb-flink-jobmanager-1
 ----
 As you can see the Kafka broker is running in container = `35b0e660b2de`
-Login into the Kafka container
+Login into the Kafka container with `Container_Id` or `Name`. Like:
 [source,shell ]
 ----
-$ docker exec -it 35b0e660b2de /bin/bash
+$ docker exec -it ssb-kafka-1 /bin/bash
 ----
 
 After login:
